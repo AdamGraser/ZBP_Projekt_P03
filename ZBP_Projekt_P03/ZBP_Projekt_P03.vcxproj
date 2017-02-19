@@ -143,15 +143,20 @@
     <ClInclude Include="ZBP_Projekt_P03.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="cd00.c" />
     <ClCompile Include="ZBP_Projekt_P03.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ZBP_Projekt_P03.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="7.ico" />
     <Image Include="small.ico" />
     <Image Include="ZBP_Projekt_P03.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Automaton\Automaton.vcxproj">
+      <Project>{a332dd8a-2ce0-472a-a040-ad93b537d2bd}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

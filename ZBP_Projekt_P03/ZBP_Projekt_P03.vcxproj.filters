@@ -29,9 +29,6 @@
     <ClCompile Include="ZBP_Projekt_P03.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="cd00.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ZBP_Projekt_P03.rc">
@@ -43,6 +40,9 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="ZBP_Projekt_P03.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="7.ico">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
