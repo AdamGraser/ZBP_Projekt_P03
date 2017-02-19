@@ -37,11 +37,25 @@ template <> class Automaton<false>
 public:
     /// <summary>Defines whether statistics should be printed on the screen.</summary>
     bool print_statistics;
+    /// <summary>Maximal lexicon string length.</summary>
+    int max_str_len;
+    /// <summary></summary>
+    int max_chars;
+    /// <summary></summary>
+    int ht_size;
+    /// <summary></summary>
+    int ht_elem_size;
+    /// <summary></summary>
+    int max_aut_size;
 
     /// <summary>Default constructor.</summary>
     /// <param name="print_statistics">Defines whether statistics should be printed on the screen.</param>
-    Automaton(bool print_statistics = true)
-        :print_statistics(print_statistics)
+    /// <param name="max_str_len">Maximal lexicon string length.</param>
+    /// <param name="max_chars"></param>
+    /// <param name="ht_size"></param>
+    Automaton(bool print_statistics = true, int max_str_len = 300, int max_chars = 256, int ht_size = (1 << 20), int ht_elem_size = (1 << 10),
+              int max_aut_size = (1 << 22))
+        :print_statistics(print_statistics), max_str_len(max_str_len), max_chars(max_chars), ht_size(ht_size), ht_elem_size(ht_elem_size), max_aut_size(max_aut_size)
     {}
 
     /// <summary>Default destructor.</summary>
@@ -59,11 +73,25 @@ template <> class Automaton<true>
 public:
     /// <summary>Defines whether statistics should be printed on the screen.</summary>
     bool print_statistics;
+    /// <summary>Maximal lexicon string length.</summary>
+    int max_str_len;
+    /// <summary></summary>
+    int max_chars;
+    /// <summary></summary>
+    int ht_size;
+    /// <summary></summary>
+    int ht_elem_size;
+    /// <summary></summary>
+    int max_aut_size;
 
     /// <summary>Default constructor.</summary>
     /// <param name="print_statistics">Defines whether statistics should be printed on the screen.</param>
-    Automaton(bool print_statistics = true)
-        :print_statistics(print_statistics)
+    /// <param name="max_str_len">Maximal lexicon string length.</param>
+    /// <param name="max_chars"></param>
+    /// <param name="ht_size"></param>
+    Automaton(bool print_statistics = true, int max_str_len = 300, int max_chars = 256, int ht_size = (1 << 20), int ht_elem_size = (1 << 10),
+              int max_aut_size = (1 << 21))
+        :print_statistics(print_statistics), max_str_len(max_str_len), max_chars(max_chars), ht_size(ht_size), ht_elem_size(ht_elem_size), max_aut_size(max_aut_size)
     {}
 
     /// <summary>Default destructor.</summary>
