@@ -43,7 +43,7 @@ void Automaton<false>::read_automat(char *fname)
 	if ((aut_file = fopen(fname, "rb")) == NULL)
 		error("Cannot open input file.");
 
-	aut_size = fread(automat, sizeof automat[0], MAX_AUT_SIZE, aut_file);
+	aut_size = fread(automat, sizeof automat[0], max_aut_size, aut_file);
 	fclose(aut_file);
 	if (aut_size >= 2)
 	{
@@ -141,8 +141,8 @@ int Automaton<false>::check_string(unsigned char *str)
 */
 void Automaton<false>::make_automat(void)
 {
-	unsigned char s0[MAX_STR_LEN + 1] = "";
-	unsigned char s1[MAX_STR_LEN + 1];
+	unsigned char s0[max_str_len + 1] = "";
+	unsigned char s1[max_str_len + 1];
 	size_t i = 0, p, q;
 	transition new_trans;
 
@@ -232,18 +232,18 @@ unsigned Automaton<false>::make_state(transition *state, unsigned state_len)
 			n_term_trans += state[i].b.term;
 	}
 
-	if (aut_size + state_len >= MAX_AUT_SIZE)
+	if (aut_size + state_len >= max_aut_size)
 		error("The automaton grew too large.");
 
 	/* put state into automat */
 	for (i = state_len - 1; i >= 0; i--)
 		automat[aut_size + i] = state[i];
 
-	if (ht_next_elem >= HT_ELEM_SIZE)
+	if (ht_next_elem >= ht_elem_size)
 	{
 		ht_next_elem = 0;
 		if ((ht_elem[++ht_last_pos] =
-			(bucket *)malloc(sizeof(bucket) * HT_ELEM_SIZE)) == NULL)
+			(bucket *)malloc(sizeof(bucket) * ht_elem_size)) == NULL)
 			error("Not enough memory.");
 	}
 	ptr = &ht_elem[ht_last_pos][ht_next_elem++];
@@ -278,7 +278,7 @@ unsigned Automaton<false>::hash_state(transition *state, unsigned state_len)
 	for (i = state_len - 1; i >= 0; i--)
 		r += state[i].all_fields;
 
-	return ((r * 324027) >> 13) % HT_SIZE;
+	return ((r * 324027) >> 13) % ht_size;
 }
 
 /*
@@ -292,7 +292,7 @@ int Automaton<false>::read_string(unsigned char *str)
 	{
 		if (c == EOF)
 			return 0;
-		if (i > MAX_STR_LEN)
+		if (i > max_str_len)
 			error("Lexicon string too long.");
 	}
 	str[i] = '\0';
@@ -327,18 +327,18 @@ void Automaton<false>::prepare_tables(void)
 {
 	int i;
 
-	for (i = HT_SIZE - 1; i >= 0; i--)
+	for (i = ht_size - 1; i >= 0; i--)
 	{
 		hash_table[i] = NULL;
 	}
 
-	for (i = MAX_AUT_SIZE / HT_ELEM_SIZE - 1; i >= 0; i--)
+	for (i = max_aut_size / ht_elem_size - 1; i >= 0; i--)
 		ht_elem[i] = NULL;
 	ht_last_pos = -1;
-	ht_next_elem = HT_ELEM_SIZE;
+	ht_next_elem = ht_elem_size;
 
 	aut_size = 0;
-	for (i = 0; i < MAX_STR_LEN + 1; i++)
+	for (i = 0; i < max_str_len + 1; i++)
 		l_state_len[i] = 0;
 }
 
@@ -366,3 +366,13 @@ void Automaton<false>::show_stat(double exec_time)
 	printf("Size of the automaton: %u bytes\n", aut_size * sizeof automat[0]);
 }
 
+bool Automaton<false>::exists(unsigned char *keyword)
+{
+	n_strings = 0;
+	n_chars = 0;
+
+	if (!check_string(keyword))
+		return false;
+
+	return true;
+}

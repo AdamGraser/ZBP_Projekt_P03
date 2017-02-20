@@ -884,7 +884,7 @@ void show_info(void)
     exit(EXIT_SUCCESS);
 }
 
-int main(int argc, char **argv)
+int mains(int argc, char **argv)
 {
     clock_t t1, t2;
 
@@ -898,12 +898,13 @@ int main(int argc, char **argv)
             t1 = clock();
             make_automat();
             save_automat(argv[2]);
-        }
-        else if (!strcmp(argv[1], "-t"))
-        { /* check automaton */
+   //     }
+   //     else if (!strcmp(argv[1], "-t"))
+   //     { /* check automaton */
 			printf("3\n");
-            open_dict(argv[3], "r");
-            t1 = clock();
+			unsigned char *text1 = (unsigned char *)"new.dic";
+            open_dict(text1, "r");
+   //         t1 = clock();
             read_automat(argv[2]);
             test_automat();
         }

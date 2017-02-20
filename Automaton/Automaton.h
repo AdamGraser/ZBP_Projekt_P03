@@ -21,12 +21,6 @@ using std::cout;
 
 /* Definitions */
 
-#define MAX_STR_LEN         300
-#define MAX_CHARS           256
-#define HT_SIZE             (1 << 20)
-#define HT_ELEM_SIZE        (1 << 10)
-#define MAX_AUT_SIZE        (1 << 21)
-
 typedef union
 {
 	unsigned all_fields;
@@ -80,31 +74,31 @@ template <> class Automaton<false>
 {
 private:
 	/// <summary>Maximal lexicon string length.</summary>
-	const int max_str_len = 300;
+	static const int max_str_len = 300;
 	/// <summary></summary>
-	const int max_chars = 256;
+	static const int max_chars = 256;
 	/// <summary></summary>
-	const int ht_size = (1 << 20);
+	static const int ht_size = (1 << 20);
 	/// <summary></summary>
-	const int ht_elem_size = (1 << 10);
+	static const int ht_elem_size = (1 << 10);
 	/// <summary></summary>
-	const int max_aut_size = (1 << 22);
+	static const int max_aut_size = (1 << 22);
 
 
 	unsigned long n_strings;            /* number of strings */
 	unsigned long n_chars;              /* number of characters */
 
-	bucket *hash_table[HT_SIZE];
-	bucket *ht_elem[MAX_AUT_SIZE / HT_ELEM_SIZE];
+	bucket *hash_table[ht_size];
+	bucket *ht_elem[max_aut_size / ht_elem_size];
 	int ht_next_elem, ht_last_pos;
 
-	transition automat[MAX_AUT_SIZE];   /* the automaton */
+	transition automat[max_aut_size];   /* the automaton */
 	unsigned aut_size;                  /* size of the automaton */
 	unsigned start_state;               /* position of the start state */
-	transition larval_state[MAX_STR_LEN + 1][MAX_CHARS];
-	size_t l_state_len[MAX_STR_LEN + 1];
-	int is_terminal[MAX_STR_LEN + 1];
-	unsigned char temp_str[MAX_STR_LEN + 1];  /* string for listing */
+	transition larval_state[max_str_len + 1][max_chars];
+	size_t l_state_len[max_str_len + 1];
+	int is_terminal[max_str_len + 1];
+	unsigned char temp_str[max_str_len + 1];  /* string for listing */
 
 	FILE *lex_file;                     /* lexicon file */
 	FILE *aut_file;                     /* automaton file */
@@ -135,15 +129,22 @@ public:
 
     /// <summary>Default constructor.</summary>
     /// <param name="print_statistics">Defines whether statistics should be printed on the screen.</param>
-    Automaton(bool print_statistics = true)
+    Automaton(char *dictFileName, char *automatFileName, bool print_statistics = true)
         :print_statistics(print_statistics)
-    {}
+	{
+		open_dict(dictFileName, "r");
+		make_automat();
+		save_automat(automatFileName);
+		read_automat(automatFileName);
+	}
 
     /// <summary>Default destructor.</summary>
     ~Automaton()
-    {}
+    {
+		fclose(lex_file);
+	}
 
-	void assign();
+	bool exists(unsigned char *keyword);
 };
 
 

@@ -151,6 +151,7 @@
   <ItemGroup>
     <ClCompile Include="Automaton.cpp" />
     <ClCompile Include="cd00.c" />
+    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
