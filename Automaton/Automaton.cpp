@@ -376,3 +376,12 @@ bool Automaton<false>::exists(unsigned char *keyword)
 
 	return true;
 }
+
+void Automaton<false>::rewind()
+{
+	/* create a pseudo state pointing to the start state */
+	memcpy(&start_state, &automat[0], sizeof automat[0]);
+	automat[0].b.dest = automat[0].all_fields;
+	if (start_state < aut_size)
+		return;
+}

@@ -26,24 +26,11 @@ typedef union
 	unsigned all_fields;
 	struct
 	{
-#ifdef USE_TREE
-		unsigned llast : 1;
-		unsigned rlast : 1;
-		unsigned dest : 21;
-#else
 		unsigned last : 1;
 		unsigned dest : 22;
-#endif
 		unsigned attr : 8;
 		unsigned term : 1;
 	} b;
-#ifdef USE_INCLUSION
-	struct
-	{
-		unsigned last : 1;
-		unsigned dest_attr_term : 31;
-	} d;
-#endif
 } transition;
 
 typedef int sizeof_unsigned_int_must_match_sizeof_transition
@@ -135,7 +122,8 @@ public:
 		open_dict(dictFileName, "r");
 		make_automat();
 		save_automat(automatFileName);
-		read_automat(automatFileName);
+		//read_automat(automatFileName);
+		rewind();
 	}
 
     /// <summary>Default destructor.</summary>
@@ -143,6 +131,8 @@ public:
     {
 		fclose(lex_file);
 	}
+
+	void rewind();
 
 	bool exists(unsigned char *keyword);
 };
