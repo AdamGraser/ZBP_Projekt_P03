@@ -108,31 +108,31 @@ void Automaton<false>::test_automat(void)
 */
 int Automaton<false>::check_string(unsigned char *str)
 {
-	unsigned pos = 0;
 	int i;
 	unsigned char w;
-
+	unsigned int term;
+	transition* it;
+	unsigned nextStart;
 	for (i = 0; str[i]; i++)
 	{
-		/* get pointer to new state */
-		pos = automat[pos].b.dest;
 		w = str[i];
+		it = i == 0 ? this->begin() : this->find(nextStart);
 
-		if (!pos)
-			return 0;
-
-		if (pos > aut_size)
-			error("Error in automaton file.");
-		/* find current character in state */
-		while (automat[pos].b.attr != (unsigned)w)
+		for (it; it != this->end(); it++)
 		{
-			if (automat[pos++].b.last)
-				return 0;
-			if (pos > aut_size)
-				error("Error in automaton file.");
+			if (it->b.attr == (unsigned)w)
+			{
+				nextStart = it->b.dest;
+				term = it->b.term;
+				break;
+			}
+			else if (it->b.last)
+			{
+				return false;
+			}
 		}
 	}
-	return automat[pos].b.term;
+	return (bool) term;
 }
 
 
@@ -382,6 +382,7 @@ void Automaton<false>::rewind()
 	/* create a pseudo state pointing to the start state */
 	memcpy(&start_state, &automat[0], sizeof automat[0]);
 	automat[0].b.dest = automat[0].all_fields;
+	currentStatePos = automat[0].b.dest;
 	if (start_state < aut_size)
 		return;
 }

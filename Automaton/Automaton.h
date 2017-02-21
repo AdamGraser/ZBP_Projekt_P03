@@ -108,7 +108,8 @@ private:
 	void prepare_tables(void);
 	void error(char *message);
 	void show_stat(double exec_time);
-
+	void rewind();
+	int currentStatePos;
 
 public:
     /// <summary>Defines whether statistics should be printed on the screen.</summary>
@@ -132,9 +133,50 @@ public:
 		fclose(lex_file);
 	}
 
-	void rewind();
-
 	bool exists(unsigned char *keyword);
+
+	unsigned size()
+	{
+		return aut_size;
+	}
+
+	unsigned max_size()
+	{
+		return max_aut_size;
+	}
+	
+	void operator++() { 
+		currentStatePos++;
+	}
+
+	transition* begin()
+	{
+		currentStatePos = automat[0].b.dest;
+		return &automat[currentStatePos];
+	}
+
+	transition* end()
+	{
+		return &automat[aut_size];
+	}
+
+	transition* find(unsigned position)
+	{
+		if (position > aut_size)
+			error("Error in automaton file.");
+		return &automat[position];
+	}
+
+	transition* operator*() 
+	{ 
+		if (currentStatePos > aut_size)
+			error("Error in automaton file.");
+		return &automat[currentStatePos]; 
+	}
+
+	transition* operator[] (int position) {
+		return this->find(position);
+	}
 };
 
 
