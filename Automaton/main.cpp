@@ -34,23 +34,53 @@ int main(int argc, char **argv)
 			//	std::cout << "Nope2" << std::endl;
 			//}
 
-			std::cout << " -----------" << std::endl;
-			std::cout << "List String:" << std::endl;
-			std::cout << " -----------" << std::endl;
-			a->print_strings(26, 0);
+			//std::cout << " -----------" << std::endl;
+			//std::cout << "List String:" << std::endl;
+			//std::cout << " -----------" << std::endl;
+			//a->print_strings(26, 0);
 			std::cout << std::endl;
 			std::cout << " -------" << std::endl;
 			std::cout << "Iterator:" << std::endl;
 			std::cout << " -------" << std::endl;
 
-			for (Automaton<false>::AutomatonIterator<transition> it = a->begin(); it != a->end(); it++)
-			{	
-				std::cout << (unsigned char)it->b.attr;
-				if (it->b.term)
+
+			std::string keyword;
+
+			const char* searchWord;
+			unsigned char currentLetter;
+			bool found;
+
+			while (true)
+			{
+				std::cin >> keyword;
+				searchWord = keyword.c_str();
+				found = false;
+				for (Automaton<false>::AutomatonLetterIterator<transition> it = a->begin(); !it.isEnd(); it++)
 				{
-					std::cout << std::endl;
+					currentLetter = (unsigned char)it->b.attr;
+					if (currentLetter == *searchWord)
+					{
+						searchWord++;
+						if ((unsigned)*searchWord == 0 && it->b.term == 1)
+						{
+							found = true;
+							break;
+						}
+						it = it.localBegin();
+					}
+				}
+
+				if (found)
+				{
+					std::cout << "FOUND: " << keyword << std::endl;
+				}
+				if (found == false)
+				{
+					std::cout << "NOT FOUND: " << keyword << std::endl;
 				}
 			}
+
+
 
         }
 		else

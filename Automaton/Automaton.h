@@ -145,25 +145,28 @@ public:
 	{
 		return max_aut_size;
 	}
+
 	template<typename T>
-	class AutomatonIterator : public std::iterator<std::random_access_iterator_tag, T> {
+	class AutomatonLetterIterator : public std::iterator<std::random_access_iterator_tag, T> {
+
 		friend class Automaton<false>;
 
 	protected:
+		bool shouldEndOnNextIncrement = false;
 		unsigned int lastMain;
 		unsigned int i;
 		T* automatArray;
-		AutomatonIterator(T* automatArray) : automatArray(automatArray), i(0) {}
-		AutomatonIterator(T* automatArray, unsigned int i) : automatArray(automatArray), i(i), lastMain(i) {}
+		AutomatonLetterIterator(T* automatArray) : automatArray(automatArray), i(0) {}
+		AutomatonLetterIterator(T* automatArray, unsigned int i) : automatArray(automatArray), i(i), lastMain(i) {}
 
 	public:
 		typedef typename std::iterator<std::random_access_iterator_tag, T>::pointer pointer;
 		typedef typename std::iterator<std::random_access_iterator_tag, T>::reference reference;
 		typedef typename std::iterator<std::random_access_iterator_tag, T>::difference_type difference_type;
 
-		AutomatonIterator(const AutomatonIterator& other) : automatArray(other.automatArray), i(other.i) {}
+		AutomatonLetterIterator(const AutomatonLetterIterator& other) : automatArray(other.automatArray), i(other.i) {}
 
-		AutomatonIterator& operator=(const AutomatonIterator& other) {
+		AutomatonLetterIterator& operator=(const AutomatonLetterIterator& other) {
 			automatArray = other.automatArray;
 			i = other.i;
 			return *this;
@@ -177,25 +180,43 @@ public:
 			return &(*(automatArray + i));
 		}
 
-		AutomatonIterator& operator++() {
-			i = (automatArray + i)->b.dest;
+		AutomatonLetterIterator& operator++() {
+			++i;
 			return *this;
 		}
 
-		AutomatonIterator operator++(int) {
-			i = (automatArray+i)->b.dest;
-			if (i == 0)
+		AutomatonLetterIterator operator++(int) {
+			return AutomatonLetterIterator(automatArray, i++);
+		}
+
+		AutomatonLetterIterator localBegin() {
+			shouldEndOnNextIncrement = false;
+			unsigned newPos = (automatArray + i)->b.dest - 1; // poprzednik potomka - na pocz¹tku pêtli zostanie wykonana inkrementacja.
+			return AutomatonLetterIterator(automatArray, newPos);
+		}
+
+		bool isEnd() {
+			if (i == -1 || i == 0)
 			{
-				i = ++lastMain;
+				return true;
 			}
-			return *this;
+			if (shouldEndOnNextIncrement)
+			{
+				shouldEndOnNextIncrement = false;
+				return true;
+			}
+			if ((automatArray + i)->b.last)
+			{
+				shouldEndOnNextIncrement = true;
+			}
+			return false;
 		}
 
-		AutomatonIterator operator+(const difference_type& n) const {
-			return AutomatonIterator(automatArray, (i + n));
+		AutomatonLetterIterator operator+(const difference_type& n) const {
+			return AutomatonLetterIterator(automatArray, (i + n));
 		}
 
-		AutomatonIterator& operator+=(const difference_type& n) {
+		AutomatonLetterIterator& operator+=(const difference_type& n) {
 			i += n;
 			return *this;
 		}
@@ -204,41 +225,41 @@ public:
 			return *(automatArray + i + n);
 		}
 
-		bool operator==(const AutomatonIterator& other) const {
+		bool operator==(const AutomatonLetterIterator& other) const {
 			return i == other.i;
 		}
 
-		bool operator!=(const AutomatonIterator& other) const {
+		bool operator!=(const AutomatonLetterIterator& other) const {
 			return i != other.i;
 		}
 
-		bool operator<(const AutomatonIterator& other) const {
+		bool operator<(const AutomatonLetterIterator& other) const {
 			return i < other.i;
 		}
 
-		bool operator>(const AutomatonIterator& other) const {
+		bool operator>(const AutomatonLetterIterator& other) const {
 			return i > other.i;
 		}
 
-		bool operator<=(const AutomatonIterator& other) const {
+		bool operator<=(const AutomatonLetterIterator& other) const {
 			return i <= other.i;
 		}
 
-		bool operator>=(const AutomatonIterator& other) const {
+		bool operator>=(const AutomatonLetterIterator& other) const {
 			return i >= other.i;
 		}
 
-		difference_type operator+(const AutomatonIterator& other) const {
+		difference_type operator+(const AutomatonLetterIterator& other) const {
 			return i + other.i;
 		}
 
-		difference_type operator-(const AutomatonIterator& other) const {
+		difference_type operator-(const AutomatonLetterIterator& other) const {
 			return i - other.i;
 		}
 	};
 
-	typedef AutomatonIterator<transition> iterator;
-	typedef AutomatonIterator<const transition> const_iterator;
+	typedef AutomatonLetterIterator<transition> iterator;
+	typedef AutomatonLetterIterator<const transition> const_iterator;
 
 	transition* a;
 
@@ -254,21 +275,6 @@ public:
 	const_iterator cbegin() const {
 		return const_iterator(automat, automat[0].b.dest);
 	}
-
-	iterator end() {
-		return iterator(automat, aut_size);
-	}
-
-	const_iterator end() const {
-		return const_iterator(automat, aut_size);
-	}
-
-	const_iterator cend() const {
-		return const_iterator(automat, aut_size);
-	}
-
-
-
 };
 
 
