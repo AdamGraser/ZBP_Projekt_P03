@@ -87,6 +87,31 @@ void Automaton<false>::list_strings(unsigned pos, int str_pos)
 	} while (!(automat[pos++].b.last));
 }
 
+void Automaton<false>::print_strings(unsigned pos, int str_pos)
+{
+	int i;
+
+	if (pos == 0)
+		return;
+
+	if (pos > aut_size)
+		error("Error in automat file.");
+	do
+	{
+		temp_str[str_pos] = (unsigned char)(automat[pos].b.attr);
+		if (automat[pos].b.term)
+		{
+			/* when string terminates at this character write the string */
+			for (i = 0; i <= str_pos; i++)
+				std::cout << temp_str[i];
+			std::cout << std::endl;
+			n_strings++;
+			n_chars += str_pos + 2;
+		}
+		/* execute recursively for all characters in current state */
+		print_strings(automat[pos].b.dest, str_pos + 1);
+	} while (!(automat[pos++].b.last));
+}
 
 /*
 ** Check if the automaton is correct

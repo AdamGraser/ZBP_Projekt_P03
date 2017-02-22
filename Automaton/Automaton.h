@@ -115,7 +115,7 @@ private:
 public:
 	/// <summary>Defines whether statistics should be printed on the screen.</summary>
 	bool print_statistics;
-
+	void print_strings(unsigned pos, int str_pos);
 	/// <summary>Default constructor.</summary>
 	/// <param name="print_statistics">Defines whether statistics should be printed on the screen.</param>
 	Automaton(char *dictFileName, char *automatFileName, bool print_statistics = true)
@@ -146,24 +146,24 @@ public:
 		return max_aut_size;
 	}
 	template<typename T>
-	class MayaArrayIter : public std::iterator<std::random_access_iterator_tag, int> {
+	class AutomatonIterator : public std::iterator<std::random_access_iterator_tag, T> {
 		friend class Automaton<false>;
 
 	protected:
 		unsigned int lastMain;
 		unsigned int i;
 		T* automatArray;
-		MayaArrayIter(T* automatArray) : automatArray(automatArray), i(0) {}
-		MayaArrayIter(T* automatArray, unsigned int i) : automatArray(automatArray), i(i), lastMain(i) {}
+		AutomatonIterator(T* automatArray) : automatArray(automatArray), i(0) {}
+		AutomatonIterator(T* automatArray, unsigned int i) : automatArray(automatArray), i(i), lastMain(i) {}
 
 	public:
-		typedef typename std::iterator<std::random_access_iterator_tag, transition>::pointer pointer;
-		typedef typename std::iterator<std::random_access_iterator_tag, transition>::reference reference;
-		typedef typename std::iterator<std::random_access_iterator_tag, transition>::difference_type difference_type;
+		typedef typename std::iterator<std::random_access_iterator_tag, T>::pointer pointer;
+		typedef typename std::iterator<std::random_access_iterator_tag, T>::reference reference;
+		typedef typename std::iterator<std::random_access_iterator_tag, T>::difference_type difference_type;
 
-		MayaArrayIter(const MayaArrayIter& other) : automatArray(other.automatArray), i(other.i) {}
+		AutomatonIterator(const AutomatonIterator& other) : automatArray(other.automatArray), i(other.i) {}
 
-		MayaArrayIter& operator=(const MayaArrayIter& other) {
+		AutomatonIterator& operator=(const AutomatonIterator& other) {
 			automatArray = other.automatArray;
 			i = other.i;
 			return *this;
@@ -177,12 +177,12 @@ public:
 			return &(*(automatArray + i));
 		}
 
-		MayaArrayIter& operator++() {
+		AutomatonIterator& operator++() {
 			i = (automatArray + i)->b.dest;
 			return *this;
 		}
 
-		MayaArrayIter operator++(int) {
+		AutomatonIterator operator++(int) {
 			i = (automatArray+i)->b.dest;
 			if (i == 0)
 			{
@@ -191,11 +191,11 @@ public:
 			return *this;
 		}
 
-		MayaArrayIter operator+(const difference_type& n) const {
-			return MayaArrayIter(automatArray, (i + n));
+		AutomatonIterator operator+(const difference_type& n) const {
+			return AutomatonIterator(automatArray, (i + n));
 		}
 
-		MayaArrayIter& operator+=(const difference_type& n) {
+		AutomatonIterator& operator+=(const difference_type& n) {
 			i += n;
 			return *this;
 		}
@@ -204,41 +204,41 @@ public:
 			return *(automatArray + i + n);
 		}
 
-		bool operator==(const MayaArrayIter& other) const {
+		bool operator==(const AutomatonIterator& other) const {
 			return i == other.i;
 		}
 
-		bool operator!=(const MayaArrayIter& other) const {
+		bool operator!=(const AutomatonIterator& other) const {
 			return i != other.i;
 		}
 
-		bool operator<(const MayaArrayIter& other) const {
+		bool operator<(const AutomatonIterator& other) const {
 			return i < other.i;
 		}
 
-		bool operator>(const MayaArrayIter& other) const {
+		bool operator>(const AutomatonIterator& other) const {
 			return i > other.i;
 		}
 
-		bool operator<=(const MayaArrayIter& other) const {
+		bool operator<=(const AutomatonIterator& other) const {
 			return i <= other.i;
 		}
 
-		bool operator>=(const MayaArrayIter& other) const {
+		bool operator>=(const AutomatonIterator& other) const {
 			return i >= other.i;
 		}
 
-		difference_type operator+(const MayaArrayIter& other) const {
+		difference_type operator+(const AutomatonIterator& other) const {
 			return i + other.i;
 		}
 
-		difference_type operator-(const MayaArrayIter& other) const {
+		difference_type operator-(const AutomatonIterator& other) const {
 			return i - other.i;
 		}
 	};
 
-	typedef MayaArrayIter<transition> iterator;
-	typedef MayaArrayIter<const transition> const_iterator;
+	typedef AutomatonIterator<transition> iterator;
+	typedef AutomatonIterator<const transition> const_iterator;
 
 	transition* a;
 
