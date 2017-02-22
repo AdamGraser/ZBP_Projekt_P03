@@ -108,31 +108,32 @@ void Automaton<false>::test_automat(void)
 */
 int Automaton<false>::check_string(unsigned char *str)
 {
-	int i;
-	unsigned char w;
-	unsigned int term;
-	transition* it;
-	unsigned nextStart;
-	for (i = 0; str[i]; i++)
-	{
-		w = str[i];
-		it = i == 0 ? this->begin() : this->find(nextStart);
+	return false;
+	//int i;
+	//unsigned char w;
+	//unsigned int term;
+	//transition* it;
+	//unsigned nextStart;
+	//for (i = 0; str[i]; i++)
+	//{
+	//	w = str[i];
+	//	it = i == 0 ? this->begin() : this->find(nextStart);
 
-		for (it; it != this->end(); it++)
-		{
-			if (it->b.attr == (unsigned)w)
-			{
-				nextStart = it->b.dest;
-				term = it->b.term;
-				break;
-			}
-			else if (it->b.last)
-			{
-				return false;
-			}
-		}
-	}
-	return (bool) term;
+	//	for (it; it != this->end(); it++)
+	//	{
+	//		if (it->b.attr == (unsigned)w)
+	//		{
+	//			nextStart = it->b.dest;
+	//			term = it->b.term;
+	//			break;
+	//		}
+	//		else if (it->b.last)
+	//		{
+	//			return false;
+	//		}
+	//	}
+	//}
+	//return (bool) term;
 }
 
 
@@ -349,14 +350,11 @@ void Automaton<false>::prepare_tables(void)
 void Automaton<false>::show_stat(double exec_time)
 {
 	printf("%lu strings\t%lu characters\n", n_strings, n_chars);
-#ifdef PRINT_STATISTICS
-	printf("%u states\t%u transitions\t%u terminal transitions\n",
-		n_states, n_trans, n_term_trans);
-#ifdef USE_INCLUSION
-	printf("%u included states\t%u included transitions\n",
-		n_states_in, n_trans_in);
-#endif
-#endif
+	if (print_statistics)
+	{
+		printf("%u states\t%u transitions\t%u terminal transitions\n",
+			n_states, n_trans, n_term_trans);
+	}
 	printf("Execution time: %.3f seconds\t", exec_time);
 	if (exec_time != 0.0)
 	{

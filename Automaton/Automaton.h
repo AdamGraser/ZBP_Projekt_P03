@@ -12,6 +12,7 @@
 #include <type_traits>
 #include <cstddef>
 #include <iostream>
+#include <iterator>
 #include <ctime>
 #include "targetver.h"
 
@@ -112,13 +113,13 @@ private:
 	int currentStatePos;
 
 public:
-    /// <summary>Defines whether statistics should be printed on the screen.</summary>
-    bool print_statistics;
+	/// <summary>Defines whether statistics should be printed on the screen.</summary>
+	bool print_statistics;
 
-    /// <summary>Default constructor.</summary>
-    /// <param name="print_statistics">Defines whether statistics should be printed on the screen.</param>
-    Automaton(char *dictFileName, char *automatFileName, bool print_statistics = true)
-        :print_statistics(print_statistics)
+	/// <summary>Default constructor.</summary>
+	/// <param name="print_statistics">Defines whether statistics should be printed on the screen.</param>
+	Automaton(char *dictFileName, char *automatFileName, bool print_statistics = true)
+		:print_statistics(print_statistics)
 	{
 		open_dict(dictFileName, "r");
 		make_automat();
@@ -127,9 +128,9 @@ public:
 		rewind();
 	}
 
-    /// <summary>Default destructor.</summary>
-    ~Automaton()
-    {
+	/// <summary>Default destructor.</summary>
+	~Automaton()
+	{
 		fclose(lex_file);
 	}
 
@@ -144,39 +145,130 @@ public:
 	{
 		return max_aut_size;
 	}
-	
-	void operator++() { 
-		currentStatePos++;
+	template<typename T>
+	class MayaArrayIter : public std::iterator<std::random_access_iterator_tag, int> {
+		friend class Automaton<false>;
+
+	protected:
+		unsigned int lastMain;
+		unsigned int i;
+		T* automatArray;
+		MayaArrayIter(T* automatArray) : automatArray(automatArray), i(0) {}
+		MayaArrayIter(T* automatArray, unsigned int i) : automatArray(automatArray), i(i), lastMain(i) {}
+
+	public:
+		typedef typename std::iterator<std::random_access_iterator_tag, transition>::pointer pointer;
+		typedef typename std::iterator<std::random_access_iterator_tag, transition>::reference reference;
+		typedef typename std::iterator<std::random_access_iterator_tag, transition>::difference_type difference_type;
+
+		MayaArrayIter(const MayaArrayIter& other) : automatArray(other.automatArray), i(other.i) {}
+
+		MayaArrayIter& operator=(const MayaArrayIter& other) {
+			automatArray = other.automatArray;
+			i = other.i;
+			return *this;
+		}
+
+		reference operator*() const {
+			return *(automatArray + i);
+		}
+
+		pointer operator->() const {
+			return &(*(automatArray + i));
+		}
+
+		MayaArrayIter& operator++() {
+			i = (automatArray + i)->b.dest;
+			return *this;
+		}
+
+		MayaArrayIter operator++(int) {
+			i = (automatArray+i)->b.dest;
+			if (i == 0)
+			{
+				i = ++lastMain;
+			}
+			return *this;
+		}
+
+		MayaArrayIter operator+(const difference_type& n) const {
+			return MayaArrayIter(automatArray, (i + n));
+		}
+
+		MayaArrayIter& operator+=(const difference_type& n) {
+			i += n;
+			return *this;
+		}
+
+		reference operator[](const difference_type& n) const {
+			return *(automatArray + i + n);
+		}
+
+		bool operator==(const MayaArrayIter& other) const {
+			return i == other.i;
+		}
+
+		bool operator!=(const MayaArrayIter& other) const {
+			return i != other.i;
+		}
+
+		bool operator<(const MayaArrayIter& other) const {
+			return i < other.i;
+		}
+
+		bool operator>(const MayaArrayIter& other) const {
+			return i > other.i;
+		}
+
+		bool operator<=(const MayaArrayIter& other) const {
+			return i <= other.i;
+		}
+
+		bool operator>=(const MayaArrayIter& other) const {
+			return i >= other.i;
+		}
+
+		difference_type operator+(const MayaArrayIter& other) const {
+			return i + other.i;
+		}
+
+		difference_type operator-(const MayaArrayIter& other) const {
+			return i - other.i;
+		}
+	};
+
+	typedef MayaArrayIter<transition> iterator;
+	typedef MayaArrayIter<const transition> const_iterator;
+
+	transition* a;
+
+	iterator begin() {
+		a = automat;
+		return iterator(automat, automat[0].b.dest);
 	}
 
-	transition* begin()
-	{
-		currentStatePos = automat[0].b.dest;
-		return &automat[currentStatePos];
+	const_iterator begin() const {
+		return const_iterator(automat, automat[0].b.dest);
 	}
 
-	transition* end()
-	{
-		return &automat[aut_size];
+	const_iterator cbegin() const {
+		return const_iterator(automat, automat[0].b.dest);
 	}
 
-	transition* find(unsigned position)
-	{
-		if (position > aut_size)
-			error("Error in automaton file.");
-		return &automat[position];
+	iterator end() {
+		return iterator(automat, aut_size);
 	}
 
-	transition* operator*() 
-	{ 
-		if (currentStatePos > aut_size)
-			error("Error in automaton file.");
-		return &automat[currentStatePos]; 
+	const_iterator end() const {
+		return const_iterator(automat, aut_size);
 	}
 
-	transition* operator[] (int position) {
-		return this->find(position);
+	const_iterator cend() const {
+		return const_iterator(automat, aut_size);
 	}
+
+
+
 };
 
 
@@ -187,30 +279,30 @@ public:
 template <> class Automaton<true>
 {
 public:
-    /// <summary>Defines whether statistics should be printed on the screen.</summary>
-    bool print_statistics;
-    /// <summary>Maximal lexicon string length.</summary>
-    int max_str_len;
-    /// <summary></summary>
-    int max_chars;
-    /// <summary></summary>
-    int ht_size;
-    /// <summary></summary>
-    int ht_elem_size;
-    /// <summary></summary>
-    int max_aut_size;
+	/// <summary>Defines whether statistics should be printed on the screen.</summary>
+	bool print_statistics;
+	/// <summary>Maximal lexicon string length.</summary>
+	int max_str_len;
+	/// <summary></summary>
+	int max_chars;
+	/// <summary></summary>
+	int ht_size;
+	/// <summary></summary>
+	int ht_elem_size;
+	/// <summary></summary>
+	int max_aut_size;
 
-    /// <summary>Default constructor.</summary>
-    /// <param name="print_statistics">Defines whether statistics should be printed on the screen.</param>
-    /// <param name="max_str_len">Maximal lexicon string length.</param>
-    /// <param name="max_chars"></param>
-    /// <param name="ht_size"></param>
-    Automaton(bool print_statistics = true, int max_str_len = 300, int max_chars = 256, int ht_size = (1 << 20), int ht_elem_size = (1 << 10),
-              int max_aut_size = (1 << 21))
-        :print_statistics(print_statistics), max_str_len(max_str_len), max_chars(max_chars), ht_size(ht_size), ht_elem_size(ht_elem_size), max_aut_size(max_aut_size)
-    {}
+	/// <summary>Default constructor.</summary>
+	/// <param name="print_statistics">Defines whether statistics should be printed on the screen.</param>
+	/// <param name="max_str_len">Maximal lexicon string length.</param>
+	/// <param name="max_chars"></param>
+	/// <param name="ht_size"></param>
+	Automaton(bool print_statistics = true, int max_str_len = 300, int max_chars = 256, int ht_size = (1 << 20), int ht_elem_size = (1 << 10),
+		int max_aut_size = (1 << 21))
+		:print_statistics(print_statistics), max_str_len(max_str_len), max_chars(max_chars), ht_size(ht_size), ht_elem_size(ht_elem_size), max_aut_size(max_aut_size)
+	{}
 
-    /// <summary>Default destructor.</summary>
-    ~Automaton()
-    {}
+	/// <summary>Default destructor.</summary>
+	~Automaton()
+	{}
 };

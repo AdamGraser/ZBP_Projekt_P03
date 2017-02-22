@@ -34,6 +34,15 @@ int main(int argc, char **argv)
 				std::cout << "Nope2" << std::endl;
 			}
 
+			for (Automaton<false>::MayaArrayIter<transition> it = a->begin(); it != a->end(); it++)
+			{	
+				std::cout << (unsigned char)it->b.attr;
+				if (it->b.term)
+				{
+					std::cout << std::endl;
+				}
+			}
+
         }
 		else
 		{
