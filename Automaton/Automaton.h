@@ -24,32 +24,6 @@ using std::string;
 using std::size_t;
 using std::cout;
 
-/* Definitions */
-
-typedef union
-{
-	unsigned all_fields;
-	struct
-	{
-		unsigned last : 1;
-		unsigned dest : 22;
-		unsigned attr : 8;
-		unsigned term : 1;
-	} b;
-} transition;
-
-typedef int sizeof_unsigned_int_must_match_sizeof_transition
-[2 * (sizeof(unsigned) == sizeof(transition)) - 1];
-
-typedef struct tbucket
-{
-	unsigned addr;
-	size_t size;
-	struct tbucket *next;
-} bucket;
-
-
-/* End definitions */
 
 /// <summary>
 /// Finite-State Automaton, that represents its states in form of lists or complete binary trees.
@@ -64,6 +38,32 @@ template <bool use_tree> class Automaton
 /// </summary>
 template <> class Automaton<false>
 {
+public:
+	/* Definitions */
+	typedef union
+	{
+		unsigned all_fields;
+		struct
+		{
+			unsigned last : 1;
+			unsigned dest : 22;
+			unsigned attr : 8;
+			unsigned term : 1;
+		} b;
+	} transition;
+
+	typedef int sizeof_unsigned_int_must_match_sizeof_transition
+		[2 * (sizeof(unsigned) == sizeof(transition)) - 1];
+
+	typedef struct tbucket
+	{
+		unsigned addr;
+		size_t size;
+		struct tbucket *next;
+	} bucket;
+
+
+	/* End definitions */
 private:
 	/// <summary>Maximal lexicon string length.</summary>
 	static const int max_str_len = 300;
@@ -101,11 +101,6 @@ private:
 	unsigned n_trans;              /* number of transitions */
 
 	void open_dict(char *fname, char *attr);
-	void save_automat(char *fname);
-	void read_automat(char *fname);
-	void list_strings(unsigned pos, int str_pos);
-	void test_automat(void);
-	int check_string(unsigned char *str);
 	void make_automat(void);
 	unsigned make_state(transition *state, unsigned state_len);
 	unsigned hash_state(transition *state, unsigned state_len);
@@ -113,26 +108,25 @@ private:
 	void set_io_buffer(FILE *file, size_t size);
 	void prepare_tables(void);
 	void error(char *message);
-	void show_stat(double exec_time);
 	void rewind();
 	int currentStatePos;
-
-public:
 	/// <summary>Defines whether statistics should be printed on the screen.</summary>
 	bool print_statistics;
-	void print_strings(unsigned pos, int str_pos);
-	void print_strings();
-
+public:
 	/// <summary>Default constructor.</summary>
 	/// <param name="print_statistics">Defines whether statistics should be printed on the screen.</param>
-	Automaton(char *dictFileName, char *automatFileName, bool print_statistics = true)
+	Automaton(char *dictFileName, bool print_statistics = true)
 		:print_statistics(print_statistics)
 	{
 		open_dict(dictFileName, "r");
 		make_automat();
-		save_automat(automatFileName);
-		//read_automat(automatFileName);
+
 		rewind();
+	}
+
+	Automaton(bool print_statistics = true)
+		:print_statistics(print_statistics)
+	{
 	}
 
 	/// <summary>Default destructor.</summary>
@@ -141,20 +135,16 @@ public:
 		fclose(lex_file);
 	}
 
-	bool exists(unsigned char *keyword);
+	void read_automat(char *fname);
+	void save_automat(char *fname);
+	void print_strings();
+	void show_stat(double exec_time);
+	bool exists(string keyword);
+	unsigned size();
 
-	unsigned size()
-	{
-		return aut_size;
-	}
+	/* ==== LETTER ITERATOR DEFINITION ==== */
 
-	unsigned max_size()
-	{
-		return max_aut_size;
-	}
-
-	template<typename T>
-	class AutomatonLetterIterator : public std::iterator<std::random_access_iterator_tag, T> {
+	class AutomatonLetterIterator : public std::iterator<std::random_access_iterator_tag, transition> {
 
 		friend class Automaton<false>;
 
@@ -162,14 +152,12 @@ public:
 		bool shouldEndOnNextIncrement = false;
 		unsigned int lastMain;
 		unsigned int i;
-		T* automatArray;
-		AutomatonLetterIterator(T* automatArray) : automatArray(automatArray), i(0) {}
-		AutomatonLetterIterator(T* automatArray, unsigned int i) : automatArray(automatArray), i(i), lastMain(i) {}
+		transition* automatArray;
+		AutomatonLetterIterator(transition* automatArray) : automatArray(automatArray), i(0) {}
+		AutomatonLetterIterator(transition* automatArray, unsigned int i) : automatArray(automatArray), i(i), lastMain(i) {}
 
 	public:
-		typedef typename std::iterator<std::random_access_iterator_tag, T>::pointer pointer;
-		typedef typename std::iterator<std::random_access_iterator_tag, T>::reference reference;
-		typedef typename std::iterator<std::random_access_iterator_tag, T>::difference_type difference_type;
+		typedef typename std::iterator<std::random_access_iterator_tag, transition>::difference_type difference_type;
 
 		AutomatonLetterIterator(const AutomatonLetterIterator& other) : automatArray(other.automatArray), i(other.i) {}
 
@@ -179,12 +167,8 @@ public:
 			return *this;
 		}
 
-		reference operator*() const {
-			return *(automatArray + i);
-		}
-
-		pointer operator->() const {
-			return &(*(automatArray + i));
+		unsigned char operator*() const {
+			return (automatArray + i)->b.attr;
 		}
 
 		AutomatonLetterIterator& operator++() {
@@ -282,16 +266,18 @@ public:
 			return i - other.i;
 		}
 	};
+	/* ==== LETTER ITERATOR DEFINITION END ==== */
 
+	/* ==== WORD ITERATOR DEFINITION ==== */
 	class AutomatonWordIterator : public std::iterator<std::forward_iterator_tag, string> {
 
 		friend class Automaton<false>;
 
 	protected:
-		AutomatonLetterIterator<transition> letterIterator;
+		AutomatonLetterIterator letterIterator;
 
 		struct Snapshot {
-			AutomatonLetterIterator<transition> it;
+			AutomatonLetterIterator it;
 			int strPos;
 		};
 
@@ -305,7 +291,7 @@ public:
 		std::string toPrint;
 		transition currentTrans;
 
-		AutomatonWordIterator(AutomatonLetterIterator<transition> letterIterator) : letterIterator(letterIterator) {
+		AutomatonWordIterator(AutomatonLetterIterator letterIterator) : letterIterator(letterIterator) {
 			snapshotStack.push(Snapshot{ letterIterator, 0 });
 		}
 
@@ -333,14 +319,10 @@ public:
 					snapshotStack.pop();
 
 					/* Params */
-
-					AutomatonLetterIterator<transition> currentIt = currentSnapshot.it;
-					currentTrans = *currentSnapshot.it;
+					AutomatonLetterIterator currentIt(currentSnapshot.it);
+					currentLetter = *currentSnapshot.it;
 					strPos = currentSnapshot.strPos;
-					currentLetter = (unsigned char)(currentTrans.b.attr);
-					isTerm = (bool)(currentTrans.b.term);
-					isLast = (bool)(currentTrans.b.last);
-
+					isLast = currentIt.isLast();
 					/* End Params */
 
 					if (currentIt.isRoot())
@@ -359,7 +341,7 @@ public:
 					Snapshot secondNew = Snapshot{ currentIt.localBegin(), strPos + 1 };
 					snapshotStack.push(secondNew);
 
-					if (isTerm)
+					if (currentIt.isTerm())
 					{
 						toPrint = tempString.str().substr(0, tempString.tellp());
 						return AutomatonWordIterator(*this);
@@ -374,30 +356,18 @@ public:
 			return snapshotStack.empty();
 		}
 	};
+	/* ==== WORD ITERATOR DEFINITION END ==== */
 
-
-	typedef AutomatonLetterIterator<transition> iterator;
-	typedef AutomatonLetterIterator<const transition> const_iterator;
-
+	typedef AutomatonLetterIterator iterator;
 	typedef AutomatonWordIterator wordIterator;
 
-	iterator begin() {
+	iterator letterBegin() {
 		return iterator(automat, automat[0].b.dest);
 	}
 
-	const_iterator begin() const {
-		return const_iterator(automat, automat[0].b.dest);
-	}
-
-	const_iterator cbegin() const {
-		return const_iterator(automat, automat[0].b.dest);
-	}
-
 	wordIterator wordBegin() {
-		return wordIterator(this->begin());
+		return wordIterator(this->letterBegin());
 	}
-
-	void print_strings(Automaton<false>::AutomatonLetterIterator<transition> it, int strPos);
 };
 
 

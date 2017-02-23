@@ -56,217 +56,6 @@ void Automaton<false>::read_automat(char *fname)
 	error("Error in input file.");
 }
 
-/*
-** Recursively list all the strings recognized by an automaton,
-** beginning at the given position in the automaton and in the
-** string.
-*/
-void Automaton<false>::list_strings(unsigned pos, int str_pos)
-{
-	int i;
-
-	if (pos == 0)
-		return;
-
-	if (pos > aut_size)
-		error("Error in automat file.");
-	do
-	{
-		temp_str[str_pos] = (unsigned char)(automat[pos].b.attr);
-		if (automat[pos].b.term)
-		{
-			/* when string terminates at this character write the string */
-			for (i = 0; i <= str_pos; i++)
-				putc(temp_str[i], lex_file);
-			putc('\n', lex_file);
-			n_strings++;
-			n_chars += str_pos + 2;
-		}
-		/* execute recursively for all characters in current state */
-		list_strings(automat[pos].b.dest, str_pos + 1);
-	} while (!(automat[pos++].b.last));
-}
-
-void Automaton<false>::print_strings(Automaton<false>::AutomatonLetterIterator<transition> it, int strPos)
-{
-
-	if (it.isRoot())
-	{
-		return;
-	}
-
-	//Automaton<false>::AutomatonLetterIterator<transition> it = this->begin();
-	//int strPos = 0;
-	transition currentTrans;
-	unsigned char currentLetter;
-	unsigned dest;
-	bool isTerm;
-	bool isLast;
-	bool isEnd;
-
-	do {
-		/* Params */
-		currentTrans = *it;
-		currentLetter = (unsigned char)(currentTrans.b.attr);
-		dest = currentTrans.b.dest;
-		isTerm = (bool)(currentTrans.b.term);
-		isLast = (bool)(currentTrans.b.last);
-		/* End Params */
-		tempString.seekp(strPos, std::ios_base::beg);
-		tempString << currentLetter;
-		std::string curString = tempString.str().substr(0, tempString.tellp());
-		if (isTerm)
-		{
-			std::string toPrint = tempString.str().substr(0, tempString.tellp());
-			std::cout << toPrint << std::endl;
-		}
-
-		print_strings(it.localBegin(), strPos + 1);
-		it++;
-	} while (!isLast);
-
-	return;
-
-}
-
-void Automaton<false>::print_strings()
-{
-	struct Snapshot {
-		Automaton<false>::AutomatonLetterIterator<transition> it;
-		int strPos;
-	};
-
-	std::stack<Snapshot> snapshotStack;
-
-	unsigned char currentLetter;
-	unsigned dest;
-	bool isTerm;
-	bool isLast;
-	bool isEnd;
-	int strPos;
-
-	std::ostringstream tempString;
-	transition currentTrans;
-	snapshotStack.push(Snapshot{ this->begin(), 0 });
-
-	while (!snapshotStack.empty())
-	{
-		do
-		{
-			Snapshot currentSnapshot = snapshotStack.top();
-			snapshotStack.pop();
-
-			/* Params */
-			Automaton<false>::AutomatonLetterIterator<transition> currentIt = currentSnapshot.it;
-			currentTrans = *currentSnapshot.it;
-			strPos = currentSnapshot.strPos;
-			currentLetter = (unsigned char)(currentTrans.b.attr);
-			dest = currentTrans.b.dest;
-			isTerm = (bool)(currentTrans.b.term);
-			isLast = (bool)(currentTrans.b.last);
-			/* End Params */
-
-			if (currentIt.isRoot())
-			{
-				break;
-			}
-
-			tempString.seekp(strPos, std::ios_base::beg);
-			tempString << currentLetter;
-			std::string curString = tempString.str().substr(0, tempString.tellp());
-			if (isTerm)
-			{
-				std::string toPrint = tempString.str().substr(0, tempString.tellp());
-				std::cout << toPrint << std::endl;
-			}
-
-			Snapshot secondNew = Snapshot{ currentIt.localBegin(), strPos + 1 };
-			if (!isLast)
-			{
-				Snapshot firstNew = Snapshot{ ++currentIt, strPos };
-				snapshotStack.push(firstNew);
-			}
-			snapshotStack.push(secondNew);
-		} while (!isLast);
-	}
-}
-
-
-
-void Automaton<false>::print_strings(unsigned pos, int str_pos)
-{
-	int i;
-
-	if (pos == 0)
-		return;
-
-	if (pos > aut_size)
-		error("Error in automat file.");
-	do
-	{
-		temp_str[str_pos] = (unsigned char)(automat[pos].b.attr);
-		if (automat[pos].b.term)
-		{
-			/* when string terminates at this character write the string */
-			for (i = 0; i <= str_pos; i++)
-				std::cout << temp_str[i];
-			std::cout << std::endl;
-			n_strings++;
-			n_chars += str_pos + 2;
-		}
-		/* execute recursively for all characters in current state */
-		print_strings(automat[pos].b.dest, str_pos + 1);
-	} while (!(automat[pos++].b.last));
-}
-
-/*
-** Check if the automaton is correct
-** (test all the strings from a lexicon).
-*/
-void Automaton<false>::test_automat(void)
-{
-	n_strings = 0;
-	n_chars = 0;
-
-	while (read_string(temp_str))
-		if (!check_string(temp_str))
-			printf("String %s not found!\n", temp_str);
-}
-
-
-/*
-** Check if the given string exists in the automaton.
-*/
-int Automaton<false>::check_string(unsigned char *str)
-{
-	return false;
-	//int i;
-	//unsigned char w;
-	//unsigned int term;
-	//transition* it;
-	//unsigned nextStart;
-	//for (i = 0; str[i]; i++)
-	//{
-	//	w = str[i];
-	//	it = i == 0 ? this->begin() : this->find(nextStart);
-
-	//	for (it; it != this->end(); it++)
-	//	{
-	//		if (it->b.attr == (unsigned)w)
-	//		{
-	//			nextStart = it->b.dest;
-	//			term = it->b.term;
-	//			break;
-	//		}
-	//		else if (it->b.last)
-	//		{
-	//			return false;
-	//		}
-	//	}
-	//}
-	//return (bool) term;
-}
-
 
 /*
 ** Create the automaton.
@@ -495,23 +284,43 @@ void Automaton<false>::show_stat(double exec_time)
 	printf("Size of the automaton: %u bytes\n", aut_size * sizeof automat[0]);
 }
 
-bool Automaton<false>::exists(unsigned char *keyword)
+
+
+/* ==== CUSTOM METHODS ==== */
+
+unsigned Automaton<false>::size()
 {
-	n_strings = 0;
-	n_chars = 0;
-
-	if (!check_string(keyword))
-		return false;
-
-	return true;
+	return aut_size;
 }
 
 void Automaton<false>::rewind()
 {
 	/* create a pseudo state pointing to the start state */
+	automat[0].all_fields = start_state;
 	memcpy(&start_state, &automat[0], sizeof automat[0]);
 	automat[0].b.dest = automat[0].all_fields;
 	currentStatePos = automat[0].b.dest;
 	if (start_state < aut_size)
 		return;
+}
+
+void Automaton<false>::print_strings()
+{
+	for (Automaton<false>::AutomatonWordIterator it = this->wordBegin(); !it.isEnd(); it++)
+	{
+		std::cout << *it << std::endl;
+	}
+}
+
+bool Automaton<false>::exists(string keyword)
+{
+	for (Automaton<false>::AutomatonWordIterator it = this->wordBegin(); !it.isEnd(); it++)
+	{
+		if (keyword == *it)
+		{
+			return true;
+		}
+	}
+
+	return false;
 }
