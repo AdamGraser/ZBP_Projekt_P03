@@ -229,6 +229,14 @@ public:
 			return i == 0;
 		}
 
+		bool isLast() {
+			return (automatArray + i)->b.last;
+		}
+
+		bool isTerm() {
+			return (automatArray + i)->b.term;
+		}
+
 		AutomatonLetterIterator operator+(const difference_type& n) const {
 			return AutomatonLetterIterator(automatArray, (i + n));
 		}
@@ -275,20 +283,15 @@ public:
 		}
 	};
 
-	template<typename T>
-	class AutomatonWordIterator : public std::iterator<std::random_access_iterator_tag, T> {
+	class AutomatonWordIterator : public std::iterator<std::forward_iterator_tag, string> {
 
 		friend class Automaton<false>;
 
 	protected:
-		bool shouldEndOnNextIncrement = false;
-		unsigned int i;
-		T* automatArray;
-		Automaton<false>::AutomatonLetterIterator<transition> letterIterator;
-
+		AutomatonLetterIterator<transition> letterIterator;
 
 		struct Snapshot {
-			Automaton<false>::AutomatonLetterIterator<transition> it;
+			AutomatonLetterIterator<transition> it;
 			int strPos;
 		};
 
@@ -297,120 +300,78 @@ public:
 		unsigned dest;
 		bool isTerm;
 		bool isLast;
-		bool isEnd;
 		int strPos;
 		std::ostringstream tempString;
+		std::string toPrint;
 		transition currentTrans;
 
-
-		AutomatonWordIterator(Automaton<false>::AutomatonLetterIterator<transition> letterIterator) : letterIterator(letterIterator) {
+		AutomatonWordIterator(AutomatonLetterIterator<transition> letterIterator) : letterIterator(letterIterator) {
 			snapshotStack.push(Snapshot{ letterIterator, 0 });
 		}
 
 	public:
-		typedef typename std::iterator<std::random_access_iterator_tag, T>::pointer pointer;
-		typedef typename std::iterator<std::random_access_iterator_tag, T>::reference reference;
-		typedef typename std::iterator<std::random_access_iterator_tag, T>::difference_type difference_type;
-
-		AutomatonWordIterator(const AutomatonWordIterator& other) : automatArray(other.automatArray), i(other.i) {}
+		AutomatonWordIterator(const AutomatonWordIterator& other) : letterIterator(other.letterIterator) {
+			snapshotStack.push(Snapshot{ letterIterator, 0 });
+		}
 
 		AutomatonWordIterator& operator=(const AutomatonWordIterator& other) {
-			automatArray = other.automatArray;
-			i = other.i;
+			letterIterator = other.letterIterator;
+			snapshotStack = other.snapshotStack;
 			return *this;
 		}
 
-		reference operator*() const {
-			return *(automatArray + i);
-		}
-
-		pointer operator->() const {
-			return &(*(automatArray + i));
-		}
-
-		AutomatonWordIterator& operator++() {
-			++i;
-			return *this;
+		std::string operator*() const {
+			return toPrint;
 		}
 
 		AutomatonWordIterator operator++(int) {
-			return AutomatonWordIterator(automatArray, i++);
-		}
+			while (!snapshotStack.empty())
+			{
+				do
+				{
+					Snapshot currentSnapshot = snapshotStack.top();
+					snapshotStack.pop();
 
-		AutomatonWordIterator localBegin() {
-			shouldEndOnNextIncrement = false;
-			unsigned newPos = (automatArray + i)->b.dest - 1; // poprzednik potomka - na pocz¹tku pêtli zostanie wykonana inkrementacja.
-			return AutomatonWordIterator(automatArray, newPos);
+					/* Params */
+
+					AutomatonLetterIterator<transition> currentIt = currentSnapshot.it;
+					currentTrans = *currentSnapshot.it;
+					strPos = currentSnapshot.strPos;
+					currentLetter = (unsigned char)(currentTrans.b.attr);
+					isTerm = (bool)(currentTrans.b.term);
+					isLast = (bool)(currentTrans.b.last);
+
+					/* End Params */
+
+					if (currentIt.isRoot())
+					{
+						break;
+					}
+
+					tempString.seekp(strPos, std::ios_base::beg);
+					tempString << currentLetter;
+
+					if (!isLast)
+					{
+						Snapshot firstNew = Snapshot{ currentIt+1, strPos };
+						snapshotStack.push(firstNew);
+					}
+					Snapshot secondNew = Snapshot{ currentIt.localBegin(), strPos + 1 };
+					snapshotStack.push(secondNew);
+
+					if (isTerm)
+					{
+						toPrint = tempString.str().substr(0, tempString.tellp());
+						return AutomatonWordIterator(*this);
+					}
+				} while (!isLast);
+			}
+
+			return AutomatonWordIterator(*this);
 		}
 
 		bool isEnd() {
-			if (i == -1 || i == 0)
-			{
-				return true;
-			}
-			if (shouldEndOnNextIncrement)
-			{
-				shouldEndOnNextIncrement = false;
-				return true;
-			}
-			if ((automatArray + i)->b.last)
-			{
-				shouldEndOnNextIncrement = true;
-			}
-			return false;
-		}
-
-		std::string toString()
-		{
-			std::ostringstream os;
-			os << (char)((automatArray + i)->b.attr);
-
-			return os.str();
-		}
-
-		AutomatonWordIterator operator+(const difference_type& n) const {
-			return AutomatonWordIterator(automatArray, (i + n));
-		}
-
-		AutomatonWordIterator& operator+=(const difference_type& n) {
-			i += n;
-			return *this;
-		}
-
-		reference operator[](const difference_type& n) const {
-			return *(automatArray + i + n);
-		}
-
-		bool operator==(const AutomatonWordIterator& other) const {
-			return i == other.i;
-		}
-
-		bool operator!=(const AutomatonWordIterator& other) const {
-			return i != other.i;
-		}
-
-		bool operator<(const AutomatonWordIterator& other) const {
-			return i < other.i;
-		}
-
-		bool operator>(const AutomatonWordIterator& other) const {
-			return i > other.i;
-		}
-
-		bool operator<=(const AutomatonWordIterator& other) const {
-			return i <= other.i;
-		}
-
-		bool operator>=(const AutomatonWordIterator& other) const {
-			return i >= other.i;
-		}
-
-		difference_type operator+(const AutomatonWordIterator& other) const {
-			return i + other.i;
-		}
-
-		difference_type operator-(const AutomatonWordIterator& other) const {
-			return i - other.i;
+			return snapshotStack.empty();
 		}
 	};
 
@@ -418,8 +379,7 @@ public:
 	typedef AutomatonLetterIterator<transition> iterator;
 	typedef AutomatonLetterIterator<const transition> const_iterator;
 
-	typedef AutomatonWordIterator<transition> wordIterator;
-	typedef AutomatonWordIterator<const transition> const_wordIterator;
+	typedef AutomatonWordIterator wordIterator;
 
 	iterator begin() {
 		return iterator(automat, automat[0].b.dest);
@@ -434,20 +394,10 @@ public:
 	}
 
 	wordIterator wordBegin() {
-		return wordIterator(automat, automat[0].b.dest);
-	}
-
-	const_wordIterator wordBegin() const {
-		return const_wordIterator(automat, automat[0].b.dest);
-	}
-
-	const_wordIterator cwordBegin() const {
-		return const_wordIterator(automat, automat[0].b.dest);
+		return wordIterator(this->begin());
 	}
 
 	void print_strings(Automaton<false>::AutomatonLetterIterator<transition> it, int strPos);
-
-
 };
 
 

@@ -43,51 +43,51 @@ int main(int argc, char **argv)
 			std::cout << "Iterator:" << std::endl;
 			std::cout << " -------" << std::endl;
 			
-			a->print_strings();
+			//a->print_strings();
 
-				//for (Automaton<false>::AutomatonWordIterator<transition> it = a->wordBegin(); !it.isEnd(); it++)
-				//{
-				//	std::cout << it.toString() << std::endl;
-				//}
+			for (Automaton<false>::AutomatonWordIterator it = a->wordBegin(); !it.isEnd(); it++)
+			{
+				std::cout << *it << std::endl;
+			}
 
 
-			//// CUSTOM WORD SEARCH
+			// CUSTOM WORD SEARCH
 
-			//std::string keyword;
+			std::string keyword;
 
-			//const char* searchWord;
-			//unsigned char currentLetter;
-			//bool found;
+			const char* searchWord;
+			unsigned char currentLetter;
+			bool found;
 
-			//while (true)
-			//{
-			//	std::cin >> keyword;
-			//	searchWord = keyword.c_str();
-			//	found = false;
-			//	for (Automaton<false>::AutomatonLetterIterator<transition> it = a->begin(); !it.isEnd(); it++)
-			//	{
-			//		currentLetter = (unsigned char)it->b.attr;
-			//		if (currentLetter == *searchWord)
-			//		{
-			//			searchWord++;
-			//			if ((unsigned)*searchWord == 0 && it->b.term == 1)
-			//			{
-			//				found = true;
-			//				break;
-			//			}
-			//			it = it.localBeginAntecedent();
-			//		}
-			//	}
+			while (true)
+			{
+				std::cin >> keyword;
+				searchWord = keyword.c_str();
+				found = false;
+				for (Automaton<false>::AutomatonLetterIterator<transition> it = a->begin(); !it.isEnd(); it++)
+				{
+					currentLetter = (unsigned char)it->b.attr;
+					if (currentLetter == *searchWord)
+					{
+						searchWord++;
+						if ((unsigned)*searchWord == 0 && it->b.term == 1)
+						{
+							found = true;
+							break;
+						}
+						it = it.localBeginAntecedent();
+					}
+				}
 
-			//	if (found)
-			//	{
-			//		std::cout << "FOUND: " << keyword << std::endl;
-			//	}
-			//	if (found == false)
-			//	{
-			//		std::cout << "NOT FOUND: " << keyword << std::endl;
-			//	}
-			//}
+				if (found)
+				{
+					std::cout << "FOUND: " << keyword << std::endl;
+				}
+				if (found == false)
+				{
+					std::cout << "NOT FOUND: " << keyword << std::endl;
+				}
+			}
 
 
 
