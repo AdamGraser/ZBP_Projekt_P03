@@ -324,3 +324,27 @@ bool Automaton<false>::exists(string keyword)
 
 	return false;
 }
+
+
+bool Automaton<false>::exists2(string keyword)
+{
+	const char* searchWord = keyword.c_str();
+	bool found = false;
+	unsigned char currentLetter;
+	for (Automaton<false>::AutomatonLetterIterator it = this->letterBegin(); !it.isEnd(); it++)
+	{
+		currentLetter = *it;
+		if (currentLetter == *searchWord)
+		{
+			searchWord++;
+			if ((unsigned)*searchWord == 0 && it.isTerm())
+			{
+				return true;
+				break;
+			}
+			it = it.localBeginAntecedent();
+		}
+	}
+
+	return false;
+}

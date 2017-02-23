@@ -119,14 +119,17 @@ public:
 		:print_statistics(print_statistics)
 	{
 		open_dict(dictFileName, "r");
+		n_strings = 0;
+		n_chars = 0;
 		make_automat();
-
 		rewind();
 	}
 
 	Automaton(bool print_statistics = true)
 		:print_statistics(print_statistics)
 	{
+		n_strings = 0;
+		n_chars = 0;
 	}
 
 	/// <summary>Default destructor.</summary>
@@ -140,6 +143,7 @@ public:
 	void print_strings();
 	void show_stat(double exec_time);
 	bool exists(string keyword);
+	bool exists2(string keyword);
 	unsigned size();
 
 	/* ==== LETTER ITERATOR DEFINITION ==== */
@@ -149,17 +153,37 @@ public:
 		friend class Automaton<false>;
 
 	protected:
+		Automaton<false>& automaton;
 		bool shouldEndOnNextIncrement = false;
-		unsigned int lastMain;
 		unsigned int i;
 		transition* automatArray;
-		AutomatonLetterIterator(transition* automatArray) : automatArray(automatArray), i(0) {}
-		AutomatonLetterIterator(transition* automatArray, unsigned int i) : automatArray(automatArray), i(i), lastMain(i) {}
+		AutomatonLetterIterator(Automaton<false>& automaton) : automaton(automaton) {
+			automatArray = (transition *)automaton.automat;
+			i = automaton.automat[0].b.dest;
+		}
+		AutomatonLetterIterator(Automaton<false>& automaton, unsigned int i) : automaton(automaton), i(i) {
+			automatArray = (transition *)automaton.automat;
+			if (i > automaton.size())
+			{
+				automaton.error("Error in automaton file.");
+			}
+		}
 
 	public:
 		typedef typename std::iterator<std::random_access_iterator_tag, transition>::difference_type difference_type;
 
-		AutomatonLetterIterator(const AutomatonLetterIterator& other) : automatArray(other.automatArray), i(other.i) {}
+		AutomatonLetterIterator(const AutomatonLetterIterator& other) : automaton(other.automaton), automatArray(other.automatArray), i(other.i) {
+			if (i > automaton.size())
+			{
+				automaton.error("Error in automaton file.");
+			}
+		}
+		AutomatonLetterIterator(const AutomatonLetterIterator& other, unsigned int i) : automaton(other.automaton), automatArray(other.automatArray), i(i) {
+			if (i > automaton.size())
+			{
+				automaton.error("Error in automaton file.");
+			}
+		}
 
 		AutomatonLetterIterator& operator=(const AutomatonLetterIterator& other) {
 			automatArray = other.automatArray;
@@ -173,23 +197,27 @@ public:
 
 		AutomatonLetterIterator& operator++() {
 			++i;
+			if (i > automaton.size())
+			{
+				automaton.error("Error in automaton file.");
+			}
 			return *this;
 		}
 
 		AutomatonLetterIterator operator++(int) {
-			return AutomatonLetterIterator(automatArray, i++);
+			return AutomatonLetterIterator(*this, i++);
 		}
 
 		AutomatonLetterIterator localBegin() {
 			shouldEndOnNextIncrement = false;
 			unsigned newPos = (automatArray + i)->b.dest;
-			return AutomatonLetterIterator(automatArray, newPos);
+			return AutomatonLetterIterator(*this, newPos);
 		}
 
 		AutomatonLetterIterator localBeginAntecedent() {
 			shouldEndOnNextIncrement = false;
 			unsigned newPos = (automatArray + i)->b.dest - 1;
-			return AutomatonLetterIterator(automatArray, newPos);
+			return AutomatonLetterIterator(*this, newPos);
 		}
 
 		bool isEnd() {
@@ -222,7 +250,7 @@ public:
 		}
 
 		AutomatonLetterIterator operator+(const difference_type& n) const {
-			return AutomatonLetterIterator(automatArray, (i + n));
+			return AutomatonLetterIterator(*this, (i + n));
 		}
 
 		AutomatonLetterIterator& operator+=(const difference_type& n) {
@@ -362,7 +390,8 @@ public:
 	typedef AutomatonWordIterator wordIterator;
 
 	iterator letterBegin() {
-		return iterator(automat, automat[0].b.dest);
+		return iterator(*this);
+		//return iterator(automat, automat[0].b.dest);
 	}
 
 	wordIterator wordBegin() {
