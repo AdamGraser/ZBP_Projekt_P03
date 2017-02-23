@@ -87,6 +87,139 @@ void Automaton<false>::list_strings(unsigned pos, int str_pos)
 	} while (!(automat[pos++].b.last));
 }
 
+void Automaton<false>::print_strings()
+{
+	struct param {
+		transition transition;
+		unsigned pos;
+	};
+
+	unsigned pos = automat[0].b.dest;
+	int str_pos = 0;
+
+	std::stack<param> paramStack;
+	paramStack.push(param{ automat[0], 0 });
+
+	std::ostringstream tempString;
+	unsigned char currentLetter;
+	unsigned dest;
+	bool isTerm;
+	bool isLast;
+	transition currentTrans;
+	param tempParam;
+	do {
+		/* Params */
+		currentTrans = automat[pos];
+		currentLetter = (unsigned char)(automat[pos].b.attr);
+		dest = (automat[pos].b.dest);
+		isTerm = (bool)(automat[pos].b.term);
+		isLast = (bool)(automat[pos].b.last);
+		/* End Params */
+
+		paramStack.push(param{ currentTrans, pos });
+		tempString << currentLetter;
+		if (isTerm)
+		{
+
+			std::string toPrint = tempString.str().substr(0, tempString.tellp());
+
+			std::cout << toPrint << std::endl;
+		}
+
+		if (dest == 0 && isLast == false)
+		{
+			pos++;
+			tempString.seekp(-1, tempString.cur);
+			paramStack.pop();
+		}
+		else if (dest == 0 && isLast)
+		{
+			while (!paramStack.empty())
+			{
+				tempParam = paramStack.top();
+				tempString.seekp(-1, tempString.cur);
+				paramStack.pop();
+				if (tempParam.transition.b.last == false)
+				{
+					pos = tempParam.pos + 1;
+					break;
+				}
+			}
+		}
+		else
+		{
+			pos = currentTrans.b.dest;
+		}
+	} while (!paramStack.empty());
+}
+
+//void Automaton<false>::print_strings()
+//{
+//struct param {
+//	transition transition;
+//	unsigned pos;
+//};
+//
+//unsigned pos = automat[0].b.dest;
+//int str_pos = 0;
+//
+//std::stack<param> paramStack;
+//paramStack.push(param{ automat[0], 0 });
+//
+//std::ostringstream tempString;
+//unsigned char currentLetter;
+//unsigned dest;
+//bool isTerm;
+//bool isLast;
+//transition currentTrans;
+//param tempParam;
+//do {
+//	/* Params */
+//	currentTrans = automat[pos];
+//	currentLetter = (unsigned char)(automat[pos].b.attr);
+//	dest = (automat[pos].b.dest);
+//	isTerm = (bool)(automat[pos].b.term);
+//	isLast = (bool)(automat[pos].b.last);
+//	/* End Params */
+//
+//	paramStack.push(param{ currentTrans, pos });
+//	tempString << currentLetter;
+//	if (isTerm)
+//	{
+//
+//		std::string toPrint = tempString.str().substr(0, tempString.tellp());
+//
+//		std::cout << toPrint << std::endl;
+//	}
+//
+//	if (dest == 0 && isLast == false)
+//	{
+//		pos++;
+//		tempString.seekp(-1, tempString.cur);
+//		paramStack.pop();
+//	}
+//	else if (dest == 0 && isLast)
+//	{
+//		while (!paramStack.empty())
+//		{
+//			tempParam = paramStack.top();
+//			tempString.seekp(-1, tempString.cur);
+//			paramStack.pop();
+//			if (tempParam.transition.b.last == false)
+//			{
+//				pos = tempParam.pos + 1;
+//				break;
+//			}
+//		}
+//	}
+//	else
+//	{
+//		pos = currentTrans.b.dest;
+//	}
+//} while (!paramStack.empty());
+//}
+
+
 void Automaton<false>::print_strings(unsigned pos, int str_pos)
 {
 	int i;
