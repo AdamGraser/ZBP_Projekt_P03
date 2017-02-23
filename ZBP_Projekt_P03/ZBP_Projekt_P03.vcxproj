@@ -87,8 +87,6 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <GenerateXMLDocumentationFiles>true</GenerateXMLDocumentationFiles>
-      <XMLDocumentationFileName>$(IntDir)ZBP_Projekt_P03_docs</XMLDocumentationFileName>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
