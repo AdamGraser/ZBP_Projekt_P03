@@ -91,6 +91,7 @@ private:
 	size_t l_state_len[max_str_len + 1];
 	int is_terminal[max_str_len + 1];
 	unsigned char temp_str[max_str_len + 1];  /* string for listing */
+	std::ostringstream tempString;
 
 	FILE *lex_file;                     /* lexicon file */
 	FILE *aut_file;                     /* automaton file */
@@ -121,6 +122,7 @@ public:
 	bool print_statistics;
 	void print_strings(unsigned pos, int str_pos);
 	void print_strings();
+
 	/// <summary>Default constructor.</summary>
 	/// <param name="print_statistics">Defines whether statistics should be printed on the screen.</param>
 	Automaton(char *dictFileName, char *automatFileName, bool print_statistics = true)
@@ -196,7 +198,13 @@ public:
 
 		AutomatonLetterIterator localBegin() {
 			shouldEndOnNextIncrement = false;
-			unsigned newPos = (automatArray + i)->b.dest - 1; // poprzednik potomka - na pocz¹tku pêtli zostanie wykonana inkrementacja.
+			unsigned newPos = (automatArray + i)->b.dest;
+			return AutomatonLetterIterator(automatArray, newPos);
+		}
+
+		AutomatonLetterIterator localBeginAntecedent() {
+			shouldEndOnNextIncrement = false;
+			unsigned newPos = (automatArray + i)->b.dest - 1;
 			return AutomatonLetterIterator(automatArray, newPos);
 		}
 
@@ -215,6 +223,10 @@ public:
 				shouldEndOnNextIncrement = true;
 			}
 			return false;
+		}
+
+		bool isRoot() {
+			return i == 0;
 		}
 
 		AutomatonLetterIterator operator+(const difference_type& n) const {
@@ -270,11 +282,30 @@ public:
 
 	protected:
 		bool shouldEndOnNextIncrement = false;
-		unsigned int lastMain;
 		unsigned int i;
 		T* automatArray;
-		AutomatonWordIterator(T* automatArray) : automatArray(automatArray), i(0) {}
-		AutomatonWordIterator(T* automatArray, unsigned int i) : automatArray(automatArray), i(i), lastMain(i) {}
+		Automaton<false>::AutomatonLetterIterator<transition> letterIterator;
+
+
+		struct Snapshot {
+			Automaton<false>::AutomatonLetterIterator<transition> it;
+			int strPos;
+		};
+
+		std::stack<Snapshot> snapshotStack;
+		unsigned char currentLetter;
+		unsigned dest;
+		bool isTerm;
+		bool isLast;
+		bool isEnd;
+		int strPos;
+		std::ostringstream tempString;
+		transition currentTrans;
+
+
+		AutomatonWordIterator(Automaton<false>::AutomatonLetterIterator<transition> letterIterator) : letterIterator(letterIterator) {
+			snapshotStack.push(Snapshot{ letterIterator, 0 });
+		}
 
 	public:
 		typedef typename std::iterator<std::random_access_iterator_tag, T>::pointer pointer;
@@ -413,6 +444,9 @@ public:
 	const_wordIterator cwordBegin() const {
 		return const_wordIterator(automat, automat[0].b.dest);
 	}
+
+	void print_strings(Automaton<false>::AutomatonLetterIterator<transition> it, int strPos);
+
 
 };
 

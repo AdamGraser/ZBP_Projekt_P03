@@ -87,137 +87,110 @@ void Automaton<false>::list_strings(unsigned pos, int str_pos)
 	} while (!(automat[pos++].b.last));
 }
 
-void Automaton<false>::print_strings()
+void Automaton<false>::print_strings(Automaton<false>::AutomatonLetterIterator<transition> it, int strPos)
 {
-	struct param {
-		transition transition;
-		unsigned pos;
-	};
 
-	unsigned pos = automat[0].b.dest;
-	int str_pos = 0;
+	if (it.isRoot())
+	{
+		return;
+	}
 
-	std::stack<param> paramStack;
-	paramStack.push(param{ automat[0], 0 });
-
-	std::ostringstream tempString;
+	//Automaton<false>::AutomatonLetterIterator<transition> it = this->begin();
+	//int strPos = 0;
+	transition currentTrans;
 	unsigned char currentLetter;
 	unsigned dest;
 	bool isTerm;
 	bool isLast;
-	transition currentTrans;
-	param tempParam;
+	bool isEnd;
+
 	do {
 		/* Params */
-		currentTrans = automat[pos];
-		currentLetter = (unsigned char)(automat[pos].b.attr);
-		dest = (automat[pos].b.dest);
-		isTerm = (bool)(automat[pos].b.term);
-		isLast = (bool)(automat[pos].b.last);
+		currentTrans = *it;
+		currentLetter = (unsigned char)(currentTrans.b.attr);
+		dest = currentTrans.b.dest;
+		isTerm = (bool)(currentTrans.b.term);
+		isLast = (bool)(currentTrans.b.last);
 		/* End Params */
-
-		paramStack.push(param{ currentTrans, pos });
+		tempString.seekp(strPos, std::ios_base::beg);
 		tempString << currentLetter;
+		std::string curString = tempString.str().substr(0, tempString.tellp());
 		if (isTerm)
 		{
-
 			std::string toPrint = tempString.str().substr(0, tempString.tellp());
-
 			std::cout << toPrint << std::endl;
 		}
 
-		if (dest == 0 && isLast == false)
-		{
-			pos++;
-			tempString.seekp(-1, tempString.cur);
-			paramStack.pop();
-		}
-		else if (dest == 0 && isLast)
-		{
-			while (!paramStack.empty())
-			{
-				tempParam = paramStack.top();
-				tempString.seekp(-1, tempString.cur);
-				paramStack.pop();
-				if (tempParam.transition.b.last == false)
-				{
-					pos = tempParam.pos + 1;
-					break;
-				}
-			}
-		}
-		else
-		{
-			pos = currentTrans.b.dest;
-		}
-	} while (!paramStack.empty());
+		print_strings(it.localBegin(), strPos + 1);
+		it++;
+	} while (!isLast);
+
+	return;
+
 }
 
-//void Automaton<false>::print_strings()
-//{
-//struct param {
-//	transition transition;
-//	unsigned pos;
-//};
-//
-//unsigned pos = automat[0].b.dest;
-//int str_pos = 0;
-//
-//std::stack<param> paramStack;
-//paramStack.push(param{ automat[0], 0 });
-//
-//std::ostringstream tempString;
-//unsigned char currentLetter;
-//unsigned dest;
-//bool isTerm;
-//bool isLast;
-//transition currentTrans;
-//param tempParam;
-//do {
-//	/* Params */
-//	currentTrans = automat[pos];
-//	currentLetter = (unsigned char)(automat[pos].b.attr);
-//	dest = (automat[pos].b.dest);
-//	isTerm = (bool)(automat[pos].b.term);
-//	isLast = (bool)(automat[pos].b.last);
-//	/* End Params */
-//
-//	paramStack.push(param{ currentTrans, pos });
-//	tempString << currentLetter;
-//	if (isTerm)
-//	{
-//
-//		std::string toPrint = tempString.str().substr(0, tempString.tellp());
-//
-//		std::cout << toPrint << std::endl;
-//	}
-//
-//	if (dest == 0 && isLast == false)
-//	{
-//		pos++;
-//		tempString.seekp(-1, tempString.cur);
-//		paramStack.pop();
-//	}
-//	else if (dest == 0 && isLast)
-//	{
-//		while (!paramStack.empty())
-//		{
-//			tempParam = paramStack.top();
-//			tempString.seekp(-1, tempString.cur);
-//			paramStack.pop();
-//			if (tempParam.transition.b.last == false)
-//			{
-//				pos = tempParam.pos + 1;
-//				break;
-//			}
-//		}
-//	}
-//	else
-//	{
-//		pos = currentTrans.b.dest;
-//	}
-//} while (!paramStack.empty());
-//}
+void Automaton<false>::print_strings()
+{
+	struct Snapshot {
+		Automaton<false>::AutomatonLetterIterator<transition> it;
+		int strPos;
+	};
+
+	std::stack<Snapshot> snapshotStack;
+
+	unsigned char currentLetter;
+	unsigned dest;
+	bool isTerm;
+	bool isLast;
+	bool isEnd;
+	int strPos;
+
+	std::ostringstream tempString;
+	transition currentTrans;
+	snapshotStack.push(Snapshot{ this->begin(), 0 });
+
+	while (!snapshotStack.empty())
+	{
+		do
+		{
+			Snapshot currentSnapshot = snapshotStack.top();
+			snapshotStack.pop();
+
+			/* Params */
+			Automaton<false>::AutomatonLetterIterator<transition> currentIt = currentSnapshot.it;
+			currentTrans = *currentSnapshot.it;
+			strPos = currentSnapshot.strPos;
+			currentLetter = (unsigned char)(currentTrans.b.attr);
+			dest = currentTrans.b.dest;
+			isTerm = (bool)(currentTrans.b.term);
+			isLast = (bool)(currentTrans.b.last);
+			/* End Params */
+
+			if (currentIt.isRoot())
+			{
+				break;
+			}
+
+			tempString.seekp(strPos, std::ios_base::beg);
+			tempString << currentLetter;
+			std::string curString = tempString.str().substr(0, tempString.tellp());
+			if (isTerm)
+			{
+				std::string toPrint = tempString.str().substr(0, tempString.tellp());
+				std::cout << toPrint << std::endl;
+			}
+
+			Snapshot secondNew = Snapshot{ currentIt.localBegin(), strPos + 1 };
+			if (!isLast)
+			{
+				Snapshot firstNew = Snapshot{ ++currentIt, strPos };
+				snapshotStack.push(firstNew);
+			}
+			snapshotStack.push(secondNew);
+		} while (!isLast);
+	}
+}
+
 
 
 void Automaton<false>::print_strings(unsigned pos, int str_pos)

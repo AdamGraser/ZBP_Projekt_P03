@@ -42,7 +42,7 @@ int main(int argc, char **argv)
 			std::cout << " -------" << std::endl;
 			std::cout << "Iterator:" << std::endl;
 			std::cout << " -------" << std::endl;
-
+			
 			a->print_strings();
 
 				//for (Automaton<false>::AutomatonWordIterator<transition> it = a->wordBegin(); !it.isEnd(); it++)
@@ -51,7 +51,7 @@ int main(int argc, char **argv)
 				//}
 
 
-			// CUSTOM WORD SEARCH
+			//// CUSTOM WORD SEARCH
 
 			//std::string keyword;
 
@@ -75,7 +75,7 @@ int main(int argc, char **argv)
 			//				found = true;
 			//				break;
 			//			}
-			//			it = it.localBegin();
+			//			it = it.localBeginAntecedent();
 			//		}
 			//	}
 
