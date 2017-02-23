@@ -6,38 +6,11 @@ int main(int argc, char **argv)
 
     if (argc == 4)
 	{
-        if (strcmp(argv[1], "-m"))
-        { /* make a new automaton */
+        if (!strcmp(argv[1], "-t"))
+        { /* test an existing automaton */
 
-			Automaton<true> *a = new Automaton<true>(argv[3], argv[2], false);
-			//unsigned char *text1 = (unsigned char *)"Radom";
-			//bool test1 = a->exists(text1);
-
-			//if (test1)
-			//{
-			//	std::cout << "yep1" << std::endl;
-			//}
-			//else
-			//{
-			//	std::cout << "Nope1" << std::endl;
-			//}
-
-			//unsigned char *text2 = (unsigned char *)"zbita";
-			//bool test2 = a->exists(text2);
-
-			//if (test2)
-			//{
-			//	std::cout << "yep2" << std::endl;
-			//}
-			//else
-			//{
-			//	std::cout << "Nope2" << std::endl;
-			//}
-
-			//std::cout << " -----------" << std::endl;
-			//std::cout << "List String:" << std::endl;
-			//std::cout << " -----------" << std::endl;
-			//a->print_strings(26, 0);
+			Automaton<true> *a = new Automaton<true>(false);
+            a->test_automat(argv[2]);
 			std::cout << std::endl;
 			std::cout << " -------" << std::endl;
 			std::cout << "Iterator:" << std::endl;
@@ -50,32 +23,49 @@ int main(int argc, char **argv)
 			{
 				std::cin >> keyword;
 
-				if (a->exists((unsigned char*)const_cast<char*>(keyword.c_str())))
-				{
-					std::cout << "FOUND: " << keyword << std::endl;
-				}
+                if (keyword == ":q")
+                {
+                    break;
+                }
                 else
-				{
-					std::cout << "NOT FOUND: " << keyword << std::endl;
-				}
+                {
+                    if (a->exists((unsigned char*)const_cast<char*>(keyword.c_str())))
+                    {
+                        std::cout << "FOUND: " << keyword << std::endl;
+                    }
+                    else
+                    {
+                        std::cout << "NOT FOUND: " << keyword << std::endl;
+                    }
+                }
 			}
-
-
-
+        }
+        else if (!strcmp(argv[1], "-l"))
+        { /* create a dictionary, basing on an existing automaton */
+            Automaton<true> *a = new Automaton<true>(false);
+            a->list_automat(argv[3], argv[2]);
+            printf("Dictionary %s created!\n", argv[3]);
+        }
+        else if (!strcmp(argv[1], "-m"))
+        { /* create an automaton, basing on an existing dictionary */
+            Automaton<true> *a = new Automaton<true>(false);
+            a->make_automat(argv[3], argv[2]);
+            printf("Automaton %s created!\n", argv[2]);
         }
 		else
 		{
-			printf("blad1\n");
+			printf("Invalid parameter\n");
 		}
         t2 = clock();
     }
 	else
 	{
 
-		printf("blad2");
+		printf("Wrong parameters number\n");
 
 	}
 
+    printf("Press any key to continue...\n");
     fgetc(stdin);
     return EXIT_SUCCESS;
 }

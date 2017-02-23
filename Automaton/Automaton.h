@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <string>
+#include <sstream>
 #include <time.h>
 #include <iterator>
 #include "targetver.h"
@@ -46,19 +47,14 @@ template <> class Automaton<false>
 template <> class Automaton<true>
 {
 public:
-    Automaton(char *lexicon_file, char *automaton_file, bool print_statistics = true)
+    Automaton(bool print_statistics = true)
         :print_statistics(print_statistics)
-    {
-        open_dict(lexicon_file, "r");
-        make_automat();
-        save_automat(automaton_file);
-        //read_automat(automatFileName);
-        rewind();
-    }
+    {}
 
     ~Automaton()
     {
         fclose(lex_file);
+        fclose(aut_file);
     }
 
 
@@ -220,8 +216,11 @@ public:
 
     // - methods
 
-    void print_strings(unsigned pos, int str_pos);
+    void print_strings(iterator it, int str_pos);
     bool exists(unsigned char *keyword);
+    void test_automat(char *automaton_file);
+    void list_automat(char *lexicon_file, char *automaton_file);
+    void make_automat(char *lexicon_file, char *automaton_file);
 
     unsigned size()
     {
@@ -285,6 +284,7 @@ private:
     unsigned char temp_str[MAX_STR_LEN + 1];  /* string for listing */
     transition temp_state[MAX_CHARS + 1];
     int currentStatePos;
+    std::ostringstream tempString;
 
     FILE *lex_file;                     /* lexicon file */
     FILE *aut_file;                     /* automaton file */
@@ -300,7 +300,7 @@ private:
     void open_dict(char *fname, char *attr);
     void save_automat(char *fname);
     void read_automat(char *fname);
-    void list_strings(unsigned pos, int str_pos, int tree_pos);
+    void list_strings(iterator it, int str_pos);
     void test_automat(void);
     bool check_string(unsigned char *str);
     void make_automat(void);

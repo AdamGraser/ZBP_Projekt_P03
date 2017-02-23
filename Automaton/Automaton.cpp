@@ -61,63 +61,93 @@ void Automaton<true>::read_automat(char *fname)
 ** beginning at the given position in the automaton and in the
 ** string.
 */
-void Automaton<true>::list_strings(unsigned pos, int str_pos, int tree_pos)
+void Automaton<true>::list_strings(iterator it, int str_pos)
 {
     int i;
-
-    if (pos == 0)
-        return;
-
-    if (pos > aut_size)
-        error("Error in automat file.");
+    transition currentTrans = *it;
+    unsigned char currentLetter = (unsigned char) (currentTrans.b.attr);
 
     /* go left */
-    if (!automat[pos + tree_pos].b.llast)
-        list_strings(pos, str_pos, tree_pos + tree_pos + 1);
+    if (!it.isEnd(currentLetter - 1))
+    {
+        iterator left(it);
+        ++left;
+        list_strings(left, str_pos);
+    }
 
     /* add new character */
-    temp_str[str_pos] = (unsigned char) (automat[pos + tree_pos].b.attr);
-    if (automat[pos + tree_pos].b.term)
+    temp_str[str_pos] = currentLetter;
+
+    if (currentTrans.b.term)
     {
         /* when string terminates at this character write the string */
         for (i = 0; i <= str_pos; i++)
             putc(temp_str[i], lex_file);
+
         putc('\n', lex_file);
         n_strings++;
         n_chars += str_pos + 2;
     }
+
     /* execute recursively for all characters in current state */
-    list_strings(automat[pos + tree_pos].b.dest, str_pos + 1, 0);
+    if (currentTrans.b.dest > 0)
+    {
+        iterator next = it.localBegin();
+        list_strings(next, str_pos + 1);
+    }
 
     /* go right */
-    if (!automat[pos + tree_pos].b.rlast)
-        list_strings(pos, str_pos, tree_pos + tree_pos + 2);
+    if (!it.isEnd(currentLetter + 1))
+    {
+        iterator right(it);
+        ++right += 1;
+        list_strings(right, str_pos);
+    }
 }
 
-void Automaton<true>::print_strings(unsigned pos, int str_pos)
+void Automaton<true>::print_strings(iterator it, int str_pos)
 {
-    //int i;
+    int i;
+    transition currentTrans = *it;
+    unsigned char currentLetter = (unsigned char) (currentTrans.b.attr);
 
-    //if (pos == 0)
-    //    return;
+    /* go left */
+    if (!it.isEnd(currentLetter - 1))
+    {
+        iterator left(it);
+        ++left;
+        print_strings(left, str_pos);
+    }
 
-    //if (pos > aut_size)
-    //    error("Error in automat file.");
-    //do
-    //{
-    //    temp_str[str_pos] = (unsigned char) (automat[pos].b.attr);
-    //    if (automat[pos].b.term)
-    //    {
-    //        /* when string terminates at this character write the string */
-    //        for (i = 0; i <= str_pos; i++)
-    //            std::cout << temp_str[i];
-    //        std::cout << std::endl;
-    //        n_strings++;
-    //        n_chars += str_pos + 2;
-    //    }
-    //    /* execute recursively for all characters in current state */
-    //    print_strings(automat[pos].b.dest, str_pos + 1);
-    //} while (!(automat[pos++].b.last));
+    /* add new character */
+    tempString.seekp(str_pos, std::ios_base::beg);
+    tempString << currentLetter;
+
+    std::string curString = tempString.str().substr(0, tempString.tellp());
+
+    if (currentTrans.b.term)
+    {
+        /* when string terminates at this character write the string */
+        std::cout << curString << std::endl;
+
+        n_strings++;
+        n_chars += str_pos + 2;
+    }
+
+    /* execute recursively for all characters in current state */
+    if (currentTrans.b.dest > 0)
+    {
+        iterator next = it.localBegin();
+        print_strings(next, str_pos + 1);
+    }
+
+    /* go right */
+    if (!it.isEnd(currentLetter + 1))
+    {
+        iterator right(it);
+        ++right += 1;
+        print_strings(right, str_pos);
+    }
 }
 
 /*
@@ -132,6 +162,29 @@ void Automaton<true>::test_automat()
     while (read_string(temp_str))
         if (!check_string(temp_str))
             printf("String %s not found!\n", temp_str);
+}
+
+void Automaton<true>::test_automat(char *automaton_file)
+{
+    read_automat(automaton_file);
+    //rewind();
+}
+
+void Automaton<true>::list_automat(char *lexicon_file, char *automaton_file)
+{
+    read_automat(automaton_file);
+    open_dict(lexicon_file, "w");
+    iterator it = begin();
+    list_strings(it, 0);
+    print_strings(it, 0);
+}
+
+void Automaton<true>::make_automat(char *lexicon_file, char *automaton_file)
+{
+    open_dict(lexicon_file, "r");
+    make_automat();
+    save_automat(automaton_file);
+    rewind();
 }
 
 /*
