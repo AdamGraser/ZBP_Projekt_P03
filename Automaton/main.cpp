@@ -3,6 +3,7 @@
 
 using namespace std;
 Automaton<false> *listAutomaton;
+Automaton<true> *treeAutomaton;
 void LoadListAutomat();
 void DisplayMainMenu();
 void MainMenu();
@@ -165,9 +166,14 @@ void MainMenu()
 
 int main(int argc, char *argv[])
 {
+	treeAutomaton = new Automaton<true>(true);
+	treeAutomaton->make_automat("new.dic", "sth_tree.bin");
 
-	DisplayMainMenu();
-	MainMenu();
+	//treeAutomaton->print_strings();
+	treeAutomaton->print_strings(treeAutomaton->begin(), 0);
+
+	//DisplayMainMenu();
+	//MainMenu();
 
 	system("PAUSE");
 	return EXIT_SUCCESS;
