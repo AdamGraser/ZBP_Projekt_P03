@@ -162,29 +162,6 @@ void Automaton<true>::test_automat()
             printf("String %s not found!\n", temp_str);
 }
 
-void Automaton<true>::test_automat(char *automaton_file)
-{
-    read_automat(automaton_file);
-    //rewind();
-}
-
-void Automaton<true>::list_automat(char *lexicon_file, char *automaton_file)
-{
-    read_automat(automaton_file);
-    open_dict(lexicon_file, "w");
-    iterator it = letterBegin();
-    list_strings(it, 0);
-    print_strings(it, 0);
-}
-
-void Automaton<true>::make_automat(char *lexicon_file, char *automaton_file)
-{
-    open_dict(lexicon_file, "r");
-    make_automat();
-    save_automat(automaton_file);
-    rewind();
-}
-
 /*
 ** Check if the given string exists in the automaton.
 */

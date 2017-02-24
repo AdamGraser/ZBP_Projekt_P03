@@ -54,14 +54,26 @@ template <> class Automaton<false>
 template <> class Automaton<true>
 {
 public:
+    Automaton(char *dictFileName, bool print_statistics = true)
+        :print_statistics(print_statistics)
+    {
+        open_dict(dictFileName, "r");
+        n_strings = 0;
+        n_chars = 0;
+        make_automat();
+        rewind();
+    }
+
     Automaton(bool print_statistics = true)
         :print_statistics(print_statistics)
-    {}
+    {
+        n_strings = 0;
+        n_chars = 0;
+    }
 
     ~Automaton()
     {
         fclose(lex_file);
-        fclose(aut_file);
     }
 
 
@@ -366,9 +378,6 @@ public:
 
     void print_strings(iterator it, int str_pos);
     bool exists(unsigned char *keyword);
-    void test_automat(char *automaton_file);
-    void list_automat(char *lexicon_file, char *automaton_file);
-    void make_automat(char *lexicon_file, char *automaton_file);
 
     unsigned size()
     {
