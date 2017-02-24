@@ -412,8 +412,7 @@ void Automaton<true>::read_automat(char *fname)
 void Automaton<true>::list_strings(iterator it, int str_pos)
 {
 	int i;
-	transition currentTrans = *it;
-	unsigned char currentLetter = (unsigned char)(currentTrans.b.attr);
+	unsigned char currentLetter = *it;
 
 	/* go left */
 	if (!it.isEnd(currentLetter - 1))
@@ -426,7 +425,7 @@ void Automaton<true>::list_strings(iterator it, int str_pos)
 	/* add new character */
 	temp_str[str_pos] = currentLetter;
 
-	if (currentTrans.b.term)
+	if (it.isTerm())
 	{
 		/* when string terminates at this character write the string */
 		for (i = 0; i <= str_pos; i++)
@@ -438,7 +437,7 @@ void Automaton<true>::list_strings(iterator it, int str_pos)
 	}
 
 	/* execute recursively for all characters in current state */
-	if (currentTrans.b.dest > 0)
+	if (!it.isRoot())
 	{
 		iterator next = it.localBegin();
 		list_strings(next, str_pos + 1);
@@ -453,11 +452,54 @@ void Automaton<true>::list_strings(iterator it, int str_pos)
 	}
 }
 
+//void Automaton<true>::print_strings(iterator it, int str_pos)
+//{
+//	int i;
+//	unsigned char currentLetter = *it;
+//
+//	/* go left */
+//	if (!it.isEnd(currentLetter - 1))
+//	{
+//		iterator left(it);
+//		++left;
+//		print_strings(left, str_pos);
+//	}
+//
+//	/* add new character */
+//	tempString.seekp(str_pos, std::ios_base::beg);
+//	tempString << currentLetter;
+//
+//	std::string curString = tempString.str().substr(0, tempString.tellp());
+//
+//	if (currentTrans.b.term)
+//	{
+//		/* when string terminates at this character write the string */
+//		std::cout << curString << std::endl;
+//
+//		n_strings++;
+//		n_chars += str_pos + 2;
+//	}
+//
+//	/* execute recursively for all characters in current state */
+//	if (currentTrans.b.dest > 0)
+//	{
+//		iterator next = it.localBegin();
+//		print_strings(next, str_pos + 1);
+//	}
+//
+//	/* go right */
+//	if (!it.isEnd(currentLetter + 1))
+//	{
+//		iterator right(it);
+//		++right += 1;
+//		print_strings(right, str_pos);
+//	}
+//}
+
 void Automaton<true>::print_strings(iterator it, int str_pos)
 {
 	int i;
-	transition currentTrans = *it;
-	unsigned char currentLetter = (unsigned char)(currentTrans.b.attr);
+	unsigned char currentLetter = *it;
 
 	/* go left */
 	if (!it.isEnd(currentLetter - 1))
@@ -473,7 +515,7 @@ void Automaton<true>::print_strings(iterator it, int str_pos)
 
 	std::string curString = tempString.str().substr(0, tempString.tellp());
 
-	if (currentTrans.b.term)
+	if (it.isTerm())
 	{
 		/* when string terminates at this character write the string */
 		std::cout << curString << std::endl;
@@ -483,7 +525,7 @@ void Automaton<true>::print_strings(iterator it, int str_pos)
 	}
 
 	/* execute recursively for all characters in current state */
-	if (currentTrans.b.dest > 0)
+	if (!it.isDestRoot())
 	{
 		iterator next = it.localBegin();
 		print_strings(next, str_pos + 1);
@@ -496,74 +538,6 @@ void Automaton<true>::print_strings(iterator it, int str_pos)
 		++right += 1;
 		print_strings(right, str_pos);
 	}
-}
-
-void Automaton<true>::print_strings()
-{
-	struct Snapshot {
-		iterator it;
-		int strPos;
-	};
-	std::stack<Snapshot> snapshotStack;
-	std::ostringstream tempString;
-	snapshotStack.push(Snapshot{ this->begin(), 0 });
-	int str_pos;
-	while (!snapshotStack.empty())
-	{
-		std::string curString = tempString.str().substr(0, tempString.tellp());
-		Snapshot currentSnapshot = snapshotStack.top();
-		snapshotStack.pop();
-
-		iterator it = currentSnapshot.it;
-		transition currentTrans = *it;
-		str_pos = currentSnapshot.strPos;
-		bool isShown = false;
-		unsigned char currentLetter = (unsigned char)(currentTrans.b.attr);
-		/* add new character */
-		tempString.seekp(str_pos, std::ios_base::beg);
-		tempString << currentLetter;
-		if (currentTrans.b.term)
-		{
-			std::string toPrint = tempString.str().substr(0, tempString.tellp());
-			/* when string terminates at this character write the string */
-			std::cout << toPrint << std::endl;
-		}
-
-		/* go right */
-		if (!it.isEnd(currentLetter + 1))
-		{
-			iterator right(it);
-			++right += 1;
-
-			Snapshot newSnapshot = Snapshot{ right, str_pos };
-			snapshotStack.push(newSnapshot);
-
-		}
-
-		if (it.isEnd(currentLetter - 1))
-		{
-			/* execute recursively for all characters in current state */
-			if (currentTrans.b.dest > 0)
-			{
-
-				iterator copy(it);
-				iterator next(copy.localBegin());
-				Snapshot newSnapshot = Snapshot{ next, str_pos + 1 };
-				snapshotStack.push(newSnapshot);
-
-			}
-		}
-		else /* go left */
-		{
-			iterator left(it);
-			++left;
-
-			Snapshot newSnapshot = Snapshot{ left, str_pos };
-			snapshotStack.push(newSnapshot);
-		}
-
-	}
-
 }
 
 /*
@@ -580,29 +554,6 @@ void Automaton<true>::test_automat()
 			printf("String %s not found!\n", temp_str);
 }
 
-void Automaton<true>::test_automat(char *automaton_file)
-{
-	read_automat(automaton_file);
-	//rewind();
-}
-
-void Automaton<true>::list_automat(char *lexicon_file, char *automaton_file)
-{
-	read_automat(automaton_file);
-	open_dict(lexicon_file, "w");
-	iterator it = begin();
-	list_strings(it, 0);
-	print_strings(it, 0);
-}
-
-void Automaton<true>::make_automat(char *lexicon_file, char *automaton_file)
-{
-	open_dict(lexicon_file, "r");
-	make_automat();
-	save_automat(automaton_file);
-	rewind();
-}
-
 /*
 ** Check if the given string exists in the automaton.
 */
@@ -612,11 +563,11 @@ bool Automaton<true>::check_string(unsigned char *str)
 	unsigned char currentLetter;
 	bool found = false;
 
-	Automaton<true>::AutomatonLetterIterator<Automaton<true>::transition> it = this->begin();
+	Automaton<true>::AutomatonLetterIterator it = this->letterBegin();
 
 	while (!it.isEnd(*searchWord))
 	{
-		currentLetter = (unsigned char)it->b.attr;
+		currentLetter = *it;
 
 		if (currentLetter == *searchWord)
 		{
@@ -624,7 +575,7 @@ bool Automaton<true>::check_string(unsigned char *str)
 
 			if ((unsigned)*searchWord == 0)
 			{
-				found = it->b.term;
+				found = it.isTerm();
 				break;
 			}
 
@@ -900,6 +851,28 @@ void Automaton<true>::show_stat(double exec_time)
 	printf("Size of the automaton: %u bytes\n", aut_size * sizeof automat[0]);
 }
 
+void Automaton<true>::print_strings()
+{
+	struct Snapshot {
+		iterator it;
+		int strPos;
+	};
+	std::stack<Snapshot> snapshotStack;
+	std::ostringstream tempString;
+	snapshotStack.push(Snapshot{ this->letterBegin(), 0 });
+	int str_pos;
+	while (!snapshotStack.empty())
+	{
+		Snapshot currentSnapshot = snapshotStack.top();
+		snapshotStack.pop();
+
+		iterator it = currentSnapshot.it;
+
+	}
+
+}
+
+
 bool Automaton<true>::exists(unsigned char *keyword)
 {
 	n_strings = 0;
@@ -910,7 +883,7 @@ bool Automaton<true>::exists(unsigned char *keyword)
 
 bool Automaton<true>::exists(string keyword)
 {
-	return exists((char*)keyword.c_str());
+	return check_string((unsigned char*)keyword.c_str());
 }
 
 

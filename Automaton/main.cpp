@@ -5,10 +5,11 @@ using namespace std;
 Automaton<false> *listAutomaton;
 Automaton<true> *treeAutomaton;
 void LoadListAutomat();
+void LoadTreeAutomat();
 void DisplayMainMenu();
 void MainMenu();
 void RunListAutomat();
-
+void RunTreeAutomat();
 int GetInput()
 {
 	int choice;
@@ -107,7 +108,7 @@ void RunListAutomat()
 		{
 			std::cout << "szukane slowo: ";
 			std::cin >> input;
-			bool result = listAutomaton->exists2(input);
+			bool result = listAutomaton->exists(input);
 			std::cout << std::endl;
 			if (result)
 			{
@@ -137,6 +138,85 @@ void RunListAutomat()
 	LoadListAutomat();
 }
 
+void LoadTreeAutomat()
+{
+
+	int choice = 0;
+	string fileName;
+	do
+	{
+		cout << "Wybor: ";
+		system("cls");
+		choice = GetInput();
+		if (choice == 1)
+		{
+			std::cout << "nazwa pliku: ";
+			std::cin >> fileName;
+			treeAutomaton = new Automaton<true>((char *)fileName.c_str());
+			DisplayAutomatonMenu();
+			RunTreeAutomat();
+		}
+		else if (choice == 2)
+		{
+			std::cout << "nazwa pliku: ";
+			std::cin >> fileName;
+			treeAutomaton = new Automaton<true>();
+			treeAutomaton->read_automat((char *)fileName.c_str());
+			DisplayAutomatonMenu();
+			RunTreeAutomat();
+		}
+
+	} while (choice != 3);
+	DisplayMainMenu();
+	MainMenu();
+}
+
+void RunTreeAutomat()
+{
+
+	int choice = 0;
+	string input;
+
+	do
+	{
+		cout << "Wybor: ";
+		system("cls");
+		choice = GetInput();
+		if (choice == 1)
+		{
+			std::cout << "BRAK IMPLEMENTACJI ITERATORA SLOW" << std::endl;
+
+		}
+		else if (choice == 2)
+		{
+			std::cout << "szukane slowo: ";
+			std::cin >> input;
+			bool result = treeAutomaton->exists2(input);
+			std::cout << std::endl;
+			if (result)
+			{
+				std::cout << "Istnieje" << std::endl;
+			}
+			else
+			{
+				std::cout << "NIE Istnieje" << std::endl;
+			}
+		}
+		else if (choice == 3)
+		{
+			treeAutomaton->print_strings(treeAutomaton->letterBegin(), 0);
+		}
+		else if (choice == 4)
+		{
+			std::cout << "nazwa pliku: ";
+			std::cin >> input;
+			treeAutomaton->save_automat((char *)input.c_str());
+		}
+	} while (choice != 5);
+
+	DisplayLoadAutomatonMenu();
+	LoadTreeAutomat();
+}
 
 
 void MainMenu()
@@ -153,6 +233,7 @@ void MainMenu()
 			break;
 		case 2:
 			DisplayLoadAutomatonMenu();
+			LoadTreeAutomat();
 			break;
 		case 3:
 			cout << "Goodbye!";
@@ -166,14 +247,8 @@ void MainMenu()
 
 int main(int argc, char *argv[])
 {
-	treeAutomaton = new Automaton<true>(true);
-	treeAutomaton->make_automat("new.dic", "sth_tree.bin");
-
-	//treeAutomaton->print_strings();
-	treeAutomaton->print_strings(treeAutomaton->begin(), 0);
-
-	//DisplayMainMenu();
-	//MainMenu();
+	DisplayMainMenu();
+	MainMenu();
 
 	system("PAUSE");
 	return EXIT_SUCCESS;

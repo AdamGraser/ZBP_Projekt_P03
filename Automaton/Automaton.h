@@ -24,6 +24,12 @@ using std::string;
 using std::size_t;
 using std::cout;
 
+typedef struct tbucket
+{
+	unsigned addr;
+	size_t size;
+	struct tbucket *next;
+} bucket;
 
 class AbstractAutomaton
 {
@@ -69,12 +75,6 @@ public:
 	typedef int sizeof_unsigned_int_must_match_sizeof_transition
 		[2 * (sizeof(unsigned) == sizeof(transition)) - 1];
 
-	typedef struct tbucket
-	{
-		unsigned addr;
-		size_t size;
-		struct tbucket *next;
-	} bucket;
 
 
 	/* End definitions */
@@ -420,20 +420,26 @@ public:
 template <> class Automaton<true> : public AbstractAutomaton
 {
 public:
-	typedef struct tbucket
+	Automaton(char *dictFileName, bool print_statistics = true)
+		:print_statistics(print_statistics)
 	{
-		unsigned addr;
-		size_t size;
-		struct tbucket *next;
-	} bucket;
+		open_dict(dictFileName, "r");
+		n_strings = 0;
+		n_chars = 0;
+		make_automat();
+		rewind();
+	}
+
 	Automaton(bool print_statistics = true)
 		:print_statistics(print_statistics)
-	{}
+	{
+		n_strings = 0;
+		n_chars = 0;
+	}
 
 	~Automaton()
 	{
 		fclose(lex_file);
-		fclose(aut_file);
 	}
 
 
@@ -455,24 +461,52 @@ public:
 	typedef int sizeof_unsigned_int_must_match_sizeof_transition
 		[2 * (sizeof(unsigned) == sizeof(transition)) - 1];
 
-	template<typename T>
-	class AutomatonLetterIterator : public std::iterator<std::random_access_iterator_tag, T>
+	/* ==== LETTER ITERATOR DEFINITION ==== */
+
+	class AutomatonLetterIterator : public std::iterator<std::random_access_iterator_tag, transition>
 	{
 		friend class Automaton<true>;
 
 	protected:
+		Automaton<true>& automaton;
 		unsigned int offset;
 		unsigned int i;
-		T* automatArray;
-		AutomatonLetterIterator(T* automatArray) : automatArray(automatArray), i(0), offset(1) {}
-		AutomatonLetterIterator(T* automatArray, unsigned int i) : automatArray(automatArray), i(i), offset(1) {}
+		transition* automatArray;
+
+		AutomatonLetterIterator(Automaton<true>& automaton) : automaton(automaton), offset(1)
+		{
+			automatArray = (transition *)automaton.automat;
+			i = automaton.automat[0].b.dest;
+		}
+
+		AutomatonLetterIterator(Automaton<true>& automaton, unsigned int i) : automaton(automaton), i(i), offset(1)
+		{
+			automatArray = (transition *)automaton.automat;
+
+			if (i > automaton.size())
+			{
+				automaton.error("Error in automaton file.");
+			}
+		}
 
 	public:
-		typedef typename std::iterator<std::random_access_iterator_tag, T>::pointer pointer;
-		typedef typename std::iterator<std::random_access_iterator_tag, T>::reference reference;
-		typedef typename std::iterator<std::random_access_iterator_tag, T>::difference_type difference_type;
+		typedef typename std::iterator<std::random_access_iterator_tag, transition>::difference_type difference_type;
 
-		AutomatonLetterIterator(const AutomatonLetterIterator& other) : automatArray(other.automatArray), i(other.i), offset(other.offset) {}
+		AutomatonLetterIterator(const AutomatonLetterIterator& other) : automaton(other.automaton), automatArray(other.automatArray), i(other.i), offset(other.offset)
+		{
+			if (i > automaton.size())
+			{
+				automaton.error("Error in automaton file.");
+			}
+		}
+
+		AutomatonLetterIterator(const AutomatonLetterIterator& other, unsigned int i) : automaton(other.automaton), automatArray(other.automatArray), i(i), offset(1)
+		{
+			if (i > automaton.size())
+			{
+				automaton.error("Error in automaton file.");
+			}
+		}
 
 		AutomatonLetterIterator& operator=(const AutomatonLetterIterator& other)
 		{
@@ -482,25 +516,26 @@ public:
 			return *this;
 		}
 
-		reference operator*() const
+		unsigned char operator*() const
 		{
-			return *(automatArray + i + offset - 1);
-		}
-
-		pointer operator->() const
-		{
-			return &(*(automatArray + i + offset - 1));
+			return (automatArray + i + offset - 1)->b.attr;
 		}
 
 		AutomatonLetterIterator& operator++()
 		{
 			offset *= 2;
+
+			if (i > automaton.size())
+			{
+				automaton.error("Error in automaton file.");
+			}
+
 			return *this;
 		}
 
 		AutomatonLetterIterator operator++(int)
 		{
-			AutomatonLetterIterator incremented(this);
+			AutomatonLetterIterator incremented(*this);
 			++incremented;
 			return incremented;
 		}
@@ -508,12 +543,12 @@ public:
 		AutomatonLetterIterator localBegin()
 		{
 			unsigned newPos = (automatArray + i + offset - 1)->b.dest;
-			return AutomatonLetterIterator(automatArray, newPos);
+			return AutomatonLetterIterator(*this, newPos);
 		}
 
 		bool isEnd(unsigned char w)
 		{
-			T node = *(automatArray + i + offset - 1);
+			transition node = *(automatArray + i + offset - 1);
 
 			if (w < node.b.attr)
 				return node.b.llast;
@@ -524,9 +559,24 @@ public:
 			return false;
 		}
 
+		bool isRoot()
+		{
+			return i == 0;
+		}
+
+		bool isDestRoot()
+		{
+			return (automatArray + i + offset - 1)->b.dest == 0;
+		}
+
+		bool isTerm()
+		{
+			return (automatArray + i + offset - 1)->b.term;
+		}
+
 		AutomatonLetterIterator operator+(const difference_type& n) const
 		{
-			AutomatonLetterIterator incremented(this);
+			AutomatonLetterIterator incremented(*this);
 			incremented.offset += n;
 			return incremented;
 		}
@@ -544,7 +594,7 @@ public:
 
 		bool operator==(const AutomatonLetterIterator& other) const
 		{
-			return i == other.i && offset = other.offset;
+			return i == other.i && offset == other.offset;
 		}
 
 		bool operator!=(const AutomatonLetterIterator& other) const
@@ -583,8 +633,74 @@ public:
 		}
 	};
 
-	typedef AutomatonLetterIterator<transition> iterator;
-	typedef AutomatonLetterIterator<const transition> const_iterator;
+	/* ==== LETTER ITERATOR DEFINITION END ==== */
+
+	/* ==== WORD ITERATOR DEFINITION ==== */
+
+	class AutomatonWordIterator : public std::iterator<std::forward_iterator_tag, string>
+	{
+		friend class Automaton<true>;
+
+	protected:
+		AutomatonLetterIterator letterIterator;
+
+		struct Snapshot
+		{
+			AutomatonLetterIterator it;
+			int strPos;
+		};
+
+		std::stack<Snapshot> snapshotStack;
+		unsigned char currentLetter;
+		unsigned dest;
+		bool isTerm;
+		bool islLast;
+		bool isrLast;
+		int strPos;
+		std::ostringstream tempString;
+		string toPrint;
+		transition currentTrans;
+
+		AutomatonWordIterator(AutomatonLetterIterator letterIterator) : letterIterator(letterIterator)
+		{
+			snapshotStack.push(Snapshot{ letterIterator, 0 });
+		}
+
+	public:
+		AutomatonWordIterator(const AutomatonWordIterator& other) : letterIterator(other.letterIterator)
+		{
+			snapshotStack.push(Snapshot{ letterIterator, 0 });
+		}
+
+		AutomatonWordIterator& operator=(const AutomatonWordIterator& other)
+		{
+			letterIterator = other.letterIterator;
+			snapshotStack = other.snapshotStack;
+			return *this;
+		}
+
+		string operator*() const
+		{
+			return toPrint;
+		}
+
+		AutomatonWordIterator operator++(int)
+		{
+
+
+			return AutomatonWordIterator(*this);
+		}
+
+		bool isEnd()
+		{
+			return snapshotStack.empty();
+		}
+	};
+
+	/* ==== WORD ITERATOR DEFINITION END ==== */
+
+	typedef AutomatonLetterIterator iterator;
+	typedef AutomatonWordIterator wordIterator;
 
 
 	// - fields
@@ -598,9 +714,8 @@ public:
 	void print_strings(iterator it, int str_pos);
 	void print_strings();
 	bool exists(unsigned char *keyword);
-	void test_automat(char *automaton_file);
-	void list_automat(char *lexicon_file, char *automaton_file);
-	void make_automat(char *lexicon_file, char *automaton_file);
+	void read_automat(char *fname);
+	void save_automat(char *fname);
 	bool exists(string keyword);
 	bool exists2(string keyword);
 
@@ -614,30 +729,16 @@ public:
 		return MAX_AUT_SIZE;
 	}
 
-	iterator begin() {
+	iterator letterBegin() {
 		a = automat;
-		return iterator(automat, automat[0].b.dest);
+		return iterator(*this, automat[0].b.dest);
 	}
 
-	const_iterator begin() const {
-		return const_iterator(automat, automat[0].b.dest);
+	wordIterator wordBegin()
+	{
+		return wordIterator(this->letterBegin());
 	}
-
-	const_iterator cbegin() const {
-		return const_iterator(automat, automat[0].b.dest);
-	}
-
-	iterator end() {
-		return iterator(automat, aut_size);
-	}
-
-	const_iterator end() const {
-		return const_iterator(automat, aut_size);
-	}
-
-	const_iterator cend() const {
-		return const_iterator(automat, aut_size);
-	}
+	void show_stat(double exec_time);
 
 private:
 	// -- consts
@@ -680,8 +781,6 @@ private:
 								   // -- methods
 
 	void open_dict(char *fname, char *attr);
-	void save_automat(char *fname);
-	void read_automat(char *fname);
 	void list_strings(iterator it, int str_pos);
 	void test_automat(void);
 	bool check_string(unsigned char *str);
@@ -693,6 +792,6 @@ private:
 	void set_io_buffer(FILE *file, size_t size);
 	void prepare_tables(void);
 	void error(char *message);
-	void show_stat(double exec_time);
+
 	void rewind();
 };
