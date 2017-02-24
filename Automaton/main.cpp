@@ -11,17 +11,17 @@ int main(int argc, char **argv)
 
 			Automaton<true> *a = new Automaton<true>(false);
             a->test_automat(argv[2]);
-			std::cout << std::endl;
-			std::cout << " -------" << std::endl;
-			std::cout << "Iterator:" << std::endl;
-			std::cout << " -------" << std::endl;
+			cout << "\n";
+			cout << " -------\n";
+			cout << "Iterator:\n";
+			cout << " -------\n";
 
 
 			std::string keyword;
 
 			while (true)
 			{
-				std::cin >> keyword;
+				cin >> keyword;
 
                 if (keyword == ":q")
                 {
@@ -31,11 +31,11 @@ int main(int argc, char **argv)
                 {
                     if (a->exists((unsigned char*)const_cast<char*>(keyword.c_str())))
                     {
-                        std::cout << "FOUND: " << keyword << std::endl;
+                        cout << "FOUND: " << keyword << "\n";
                     }
                     else
                     {
-                        std::cout << "NOT FOUND: " << keyword << std::endl;
+                        cout << "NOT FOUND: " << keyword << "\n";
                     }
                 }
 			}
@@ -44,28 +44,27 @@ int main(int argc, char **argv)
         { /* create a dictionary, basing on an existing automaton */
             Automaton<true> *a = new Automaton<true>(false);
             a->list_automat(argv[3], argv[2]);
-            printf("Dictionary %s created!\n", argv[3]);
+            cout << "Dictionary " << argv[3] << " created!\n";
         }
         else if (!strcmp(argv[1], "-m"))
         { /* create an automaton, basing on an existing dictionary */
             Automaton<true> *a = new Automaton<true>(false);
             a->make_automat(argv[3], argv[2]);
-            printf("Automaton %s created!\n", argv[2]);
+            cout << "Automaton " << argv[2] << " created!\n";
         }
 		else
 		{
-			printf("Invalid parameter\n");
+            cout << "Invalid parameter\n";
 		}
         t2 = clock();
     }
 	else
 	{
-
-		printf("Wrong parameters number\n");
+        cout << "Wrong parameters number\n";
 
 	}
 
-    printf("Press any key to continue...\n");
+    cout << "Press any key to continue..." << endl;
     fgetc(stdin);
     return EXIT_SUCCESS;
 }

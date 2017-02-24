@@ -64,8 +64,7 @@ void Automaton<true>::read_automat(char *fname)
 void Automaton<true>::list_strings(iterator it, int str_pos)
 {
     int i;
-    transition currentTrans = *it;
-    unsigned char currentLetter = (unsigned char) (currentTrans.b.attr);
+    unsigned char currentLetter = *it;
 
     /* go left */
     if (!it.isEnd(currentLetter - 1))
@@ -78,7 +77,7 @@ void Automaton<true>::list_strings(iterator it, int str_pos)
     /* add new character */
     temp_str[str_pos] = currentLetter;
 
-    if (currentTrans.b.term)
+    if (it.isTerm())
     {
         /* when string terminates at this character write the string */
         for (i = 0; i <= str_pos; i++)
@@ -90,7 +89,7 @@ void Automaton<true>::list_strings(iterator it, int str_pos)
     }
 
     /* execute recursively for all characters in current state */
-    if (currentTrans.b.dest > 0)
+    if (!it.isRoot())
     {
         iterator next = it.localBegin();
         list_strings(next, str_pos + 1);
@@ -108,8 +107,7 @@ void Automaton<true>::list_strings(iterator it, int str_pos)
 void Automaton<true>::print_strings(iterator it, int str_pos)
 {
     int i;
-    transition currentTrans = *it;
-    unsigned char currentLetter = (unsigned char) (currentTrans.b.attr);
+    unsigned char currentLetter = *it;
 
     /* go left */
     if (!it.isEnd(currentLetter - 1))
@@ -125,7 +123,7 @@ void Automaton<true>::print_strings(iterator it, int str_pos)
 
     std::string curString = tempString.str().substr(0, tempString.tellp());
 
-    if (currentTrans.b.term)
+    if (it.isTerm())
     {
         /* when string terminates at this character write the string */
         std::cout << curString << std::endl;
@@ -135,7 +133,7 @@ void Automaton<true>::print_strings(iterator it, int str_pos)
     }
 
     /* execute recursively for all characters in current state */
-    if (currentTrans.b.dest > 0)
+    if (!it.isRoot())
     {
         iterator next = it.localBegin();
         print_strings(next, str_pos + 1);
@@ -174,7 +172,7 @@ void Automaton<true>::list_automat(char *lexicon_file, char *automaton_file)
 {
     read_automat(automaton_file);
     open_dict(lexicon_file, "w");
-    iterator it = begin();
+    iterator it = letterBegin();
     list_strings(it, 0);
     print_strings(it, 0);
 }
@@ -196,11 +194,11 @@ bool Automaton<true>::check_string(unsigned char *str)
     unsigned char currentLetter;
     bool found = false;
 
-    Automaton<true>::AutomatonLetterIterator<Automaton<true>::transition> it = this->begin();
+    Automaton<true>::AutomatonLetterIterator it = this->letterBegin();
 
     while (!it.isEnd(*searchWord))
     {
-        currentLetter = (unsigned char) it->b.attr;
+        currentLetter = *it;
 
         if (currentLetter == *searchWord)
         {
@@ -208,7 +206,7 @@ bool Automaton<true>::check_string(unsigned char *str)
 
             if ((unsigned) *searchWord == 0)
             {
-                found = it->b.term;
+                found = it.isTerm();
                 break;
             }
 
