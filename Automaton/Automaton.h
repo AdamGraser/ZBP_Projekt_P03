@@ -377,7 +377,7 @@ public:
 
 					if (!isLast)
 					{
-						Snapshot firstNew = Snapshot{ currentIt+1, strPos };
+						Snapshot firstNew = Snapshot{ currentIt + 1, strPos };
 						snapshotStack.push(firstNew);
 					}
 					Snapshot secondNew = Snapshot{ currentIt.localBegin(), strPos + 1 };
@@ -700,54 +700,61 @@ public:
 				/* add new character */
 				tempString.seekp(str_pos, std::ios_base::beg);
 				tempString << currentLetter;
+				/* when string terminates at this character write the string */
+				toPrint = tempString.str().substr(0, tempString.tellp());
 
 				switch (currentSnapshot.stage)
 				{
 				case 0:
-					/* go right */
-					if (!it.isEnd(currentLetter + 1))
-					{
-						AutomatonLetterIterator right(it);
-						++right += 1;
-						Snapshot rightSnap = Snapshot{ right, str_pos, 0 };
-						snapshotStack.push(rightSnap);
-					}
-
-
-					/* execute recursively for all characters in current state */
-					if (!it.isDestRoot())
-					{
-						AutomatonLetterIterator next = it.localBegin();
-						Snapshot nextSnap = Snapshot{ next, str_pos + 1, 0 };
-						snapshotStack.push(nextSnap);
-					}
-
+					currentSnapshot.stage = 1;
+					snapshotStack.push(currentSnapshot);
 
 					/* go left */
 					if (!it.isEnd(currentLetter - 1))
 					{
-						currentSnapshot.stage = 1;
-						snapshotStack.push(currentSnapshot);
+
 						AutomatonLetterIterator left(it);
 						++left;
 						Snapshot leftSnap = Snapshot{ left, str_pos, 0 };
 						snapshotStack.push(leftSnap);
 					}
 
-
 					break;
 
 				case 1:
+					/* go right */
+					if (!it.isEnd(currentLetter + 1))
+					{
+						/* execute recursively for all characters in current state */
+						AutomatonLetterIterator right(it);
+						++right += 1;
+						Snapshot rightSnap = Snapshot{ right, str_pos, 0 };
+						snapshotStack.push(rightSnap);
+					}
+					if (!it.isDestRoot())
+					{
+						AutomatonLetterIterator next = it.localBegin();
+						Snapshot nextSnap = Snapshot{ next, str_pos + 1, 0 };
+						snapshotStack.push(nextSnap);
 
+
+					}
+					if (it.isTerm())
+					{
+						currentSnapshot.stage = 2;
+						snapshotStack.push(currentSnapshot);
+						return AutomatonWordIterator(*this);
+					}
+
+					continue;
 					break;
+				case 2:
+				{
+					continue;
+				}
 				}
 
-				if (it.isTerm())
-				{
-					/* when string terminates at this character write the string */
-					toPrint = tempString.str().substr(0, tempString.tellp());
-					return AutomatonWordIterator(*this);
-				}
+				
 
 			}
 

@@ -257,16 +257,18 @@ void MainMenu()
 
 int main(int argc, char *argv[])
 {
-	//treeAutomaton = new Automaton<true>("new.dic", true);
-	////treeAutomaton->print_strings();
+	treeAutomaton = new Automaton<true>("new.dic", true);
+	treeAutomaton->print_strings(treeAutomaton->letterBegin(), 0);
 
-	//for (Automaton<true>::AutomatonWordIterator it = treeAutomaton->wordBegin(); !it.isEnd(); it++)
-	//{
-	//	std::cout << *it << std::endl;
-	//}
+	std::cout << "----------" << std::endl;
 
-	DisplayMainMenu();
-	MainMenu();
+	for (Automaton<true>::AutomatonWordIterator it = treeAutomaton->wordBegin(); !it.isEnd(); it++)
+	{
+		std::cout << *it << std::endl;
+	}
+
+	//DisplayMainMenu();
+	//MainMenu();
 
 	system("PAUSE");
 	return EXIT_SUCCESS;
