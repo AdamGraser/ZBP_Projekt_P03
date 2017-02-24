@@ -184,8 +184,18 @@ void RunTreeAutomat()
 		choice = GetInput();
 		if (choice == 1)
 		{
-			std::cout << "BRAK IMPLEMENTACJI ITERATORA SLOW" << std::endl;
-
+			std::cout << "szukane slowo: ";
+			std::cin >> input;
+			bool result = treeAutomaton->exists(input);
+			std::cout << std::endl;
+			if (result)
+			{
+				std::cout << "Istnieje" << std::endl;
+			}
+			else
+			{
+				std::cout << "NIE Istnieje" << std::endl;
+			}
 		}
 		else if (choice == 2)
 		{
@@ -247,6 +257,14 @@ void MainMenu()
 
 int main(int argc, char *argv[])
 {
+	//treeAutomaton = new Automaton<true>("new.dic", true);
+	////treeAutomaton->print_strings();
+
+	//for (Automaton<true>::AutomatonWordIterator it = treeAutomaton->wordBegin(); !it.isEnd(); it++)
+	//{
+	//	std::cout << *it << std::endl;
+	//}
+
 	DisplayMainMenu();
 	MainMenu();
 

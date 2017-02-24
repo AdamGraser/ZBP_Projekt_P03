@@ -141,6 +141,7 @@ public:
 	Automaton(bool print_statistics = true)
 		:print_statistics(print_statistics)
 	{
+		aut_size = 0;
 		n_strings = 0;
 		n_chars = 0;
 	}
@@ -433,6 +434,7 @@ public:
 	Automaton(bool print_statistics = true)
 		:print_statistics(print_statistics)
 	{
+		aut_size = 0;
 		n_strings = 0;
 		n_chars = 0;
 	}
@@ -644,32 +646,32 @@ public:
 	protected:
 		AutomatonLetterIterator letterIterator;
 
-		struct Snapshot
-		{
+		struct Snapshot {
 			AutomatonLetterIterator it;
 			int strPos;
+			int stage;
 		};
-
 		std::stack<Snapshot> snapshotStack;
+		std::ostringstream tempString;
+		int str_pos;
 		unsigned char currentLetter;
 		unsigned dest;
 		bool isTerm;
 		bool islLast;
 		bool isrLast;
-		int strPos;
-		std::ostringstream tempString;
 		string toPrint;
 		transition currentTrans;
 
+
 		AutomatonWordIterator(AutomatonLetterIterator letterIterator) : letterIterator(letterIterator)
 		{
-			snapshotStack.push(Snapshot{ letterIterator, 0 });
+			snapshotStack.push(Snapshot{ letterIterator, 0, 0 });
 		}
 
 	public:
 		AutomatonWordIterator(const AutomatonWordIterator& other) : letterIterator(other.letterIterator)
 		{
-			snapshotStack.push(Snapshot{ letterIterator, 0 });
+			snapshotStack.push(Snapshot{ letterIterator, 0, 0 });
 		}
 
 		AutomatonWordIterator& operator=(const AutomatonWordIterator& other)
@@ -686,7 +688,68 @@ public:
 
 		AutomatonWordIterator operator++(int)
 		{
+			while (!snapshotStack.empty())
+			{
+				Snapshot currentSnapshot = snapshotStack.top();
+				snapshotStack.pop();
+				AutomatonLetterIterator it = currentSnapshot.it;
 
+				currentLetter = *it;
+				str_pos = currentSnapshot.strPos;
+
+				/* add new character */
+				tempString.seekp(str_pos, std::ios_base::beg);
+				tempString << currentLetter;
+
+				switch (currentSnapshot.stage)
+				{
+				case 0:
+					/* go right */
+					if (!it.isEnd(currentLetter + 1))
+					{
+						AutomatonLetterIterator right(it);
+						++right += 1;
+						Snapshot rightSnap = Snapshot{ right, str_pos, 0 };
+						snapshotStack.push(rightSnap);
+					}
+
+
+					/* execute recursively for all characters in current state */
+					if (!it.isDestRoot())
+					{
+						AutomatonLetterIterator next = it.localBegin();
+						Snapshot nextSnap = Snapshot{ next, str_pos + 1, 0 };
+						snapshotStack.push(nextSnap);
+					}
+
+
+					/* go left */
+					if (!it.isEnd(currentLetter - 1))
+					{
+						currentSnapshot.stage = 1;
+						snapshotStack.push(currentSnapshot);
+						AutomatonLetterIterator left(it);
+						++left;
+						Snapshot leftSnap = Snapshot{ left, str_pos, 0 };
+						snapshotStack.push(leftSnap);
+					}
+
+
+					break;
+
+				case 1:
+
+					break;
+				}
+
+				if (it.isTerm())
+				{
+					/* when string terminates at this character write the string */
+					toPrint = tempString.str().substr(0, tempString.tellp());
+					return AutomatonWordIterator(*this);
+				}
+
+			}
 
 			return AutomatonWordIterator(*this);
 		}
@@ -706,7 +769,6 @@ public:
 	// - fields
 
 	bool print_statistics;
-	transition* a;
 
 
 	// - methods
@@ -730,7 +792,6 @@ public:
 	}
 
 	iterator letterBegin() {
-		a = automat;
 		return iterator(*this, automat[0].b.dest);
 	}
 

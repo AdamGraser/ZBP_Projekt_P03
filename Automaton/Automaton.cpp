@@ -856,17 +856,77 @@ void Automaton<true>::print_strings()
 	struct Snapshot {
 		iterator it;
 		int strPos;
+		int stage;
 	};
 	std::stack<Snapshot> snapshotStack;
 	std::ostringstream tempString;
-	snapshotStack.push(Snapshot{ this->letterBegin(), 0 });
+	snapshotStack.push(Snapshot{ this->letterBegin(), 0, 0 });
 	int str_pos;
+	unsigned char currentLetter;
+
 	while (!snapshotStack.empty())
 	{
 		Snapshot currentSnapshot = snapshotStack.top();
 		snapshotStack.pop();
-
 		iterator it = currentSnapshot.it;
+
+		currentLetter = *it;
+		str_pos = currentSnapshot.strPos;
+
+		/* add new character */
+		tempString.seekp(str_pos, std::ios_base::beg);
+		tempString << currentLetter;
+
+
+		if (it.isTerm())
+		{
+			std::string curString = tempString.str().substr(0, tempString.tellp());
+			/* when string terminates at this character write the string */
+			std::cout << curString << std::endl;
+		}
+
+
+		switch (currentSnapshot.stage)
+		{
+		case 0:
+			/* go right */
+			if (!it.isEnd(currentLetter + 1))
+			{
+				iterator right(it);
+				++right += 1;
+				Snapshot rightSnap = Snapshot{ right, str_pos, 0 };
+				snapshotStack.push(rightSnap);
+			}
+
+
+			/* execute recursively for all characters in current state */
+			if (!it.isDestRoot())
+			{
+				iterator next = it.localBegin();
+				Snapshot nextSnap = Snapshot{ next, str_pos + 1, 0 };
+				snapshotStack.push(nextSnap);
+			}
+
+
+			/* go left */
+			if (!it.isEnd(currentLetter - 1))
+			{
+				currentSnapshot.stage = 1;
+				snapshotStack.push(currentSnapshot);
+				iterator left(it);
+				++left;
+				Snapshot leftSnap = Snapshot{ left, str_pos, 0 };
+				snapshotStack.push(leftSnap);
+			}
+
+
+			break;
+
+		case 1:
+
+			break;
+
+		}
 
 	}
 
@@ -883,13 +943,21 @@ bool Automaton<true>::exists(unsigned char *keyword)
 
 bool Automaton<true>::exists(string keyword)
 {
-	return check_string((unsigned char*)keyword.c_str());
+	for (Automaton<true>::AutomatonWordIterator it = this->wordBegin(); !it.isEnd(); it++)
+	{
+		if (keyword == *it)
+		{
+			return true;
+		}
+	}
+	return false;
 }
 
 
 bool Automaton<true>::exists2(string keyword)
 {
-	return false;
+
+	return check_string((unsigned char*)keyword.c_str());
 }
 
 void Automaton<true>::rewind()
