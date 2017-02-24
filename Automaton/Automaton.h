@@ -378,6 +378,8 @@ public:
 
     void print_strings(iterator it, int str_pos);
     bool exists(unsigned char *keyword);
+    void read_automat(char *fname);
+    void save_automat(char *fname);
 
     unsigned size()
     {
@@ -440,8 +442,6 @@ private:
     // -- methods
 
     void open_dict(char *fname, char *attr);
-    void save_automat(char *fname);
-    void read_automat(char *fname);
     void list_strings(iterator it, int str_pos);
     void test_automat(void);
     bool check_string(unsigned char *str);
