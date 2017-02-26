@@ -214,7 +214,7 @@ void RunTreeAutomat()
 		}
 		else if (choice == 3)
 		{
-			treeAutomaton->print_strings(treeAutomaton->letterBegin(), 0);
+			treeAutomaton->print_strings();
 		}
 		else if (choice == 4)
 		{
