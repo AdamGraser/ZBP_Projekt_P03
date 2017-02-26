@@ -23,7 +23,7 @@ prefixes are correct words were reported as correct
 
 #define PRINT_STATISTICS
 /*#define USE_TREE          /* represent states in complete binary trees */
-/*#define USE_INCLUSION     /* enable including states */
+#define USE_INCLUSION     /* enable including states */
 
 #define MAX_STR_LEN         300
 #define MAX_CHARS           256
@@ -884,28 +884,33 @@ void show_info(void)
     exit(EXIT_SUCCESS);
 }
 
-int main(int argc, char **argv)
+int mains(int argc, char **argv)
 {
     clock_t t1, t2;
 
     if (argc == 4)
     {
+		printf("1\n");
         if (!strcmp(argv[1], "-m"))
         { /* make a new automaton */
+			printf("2\n");
             open_dict(argv[3], "r");
             t1 = clock();
             make_automat();
             save_automat(argv[2]);
-        }
-        else if (!strcmp(argv[1], "-t"))
-        { /* check automaton */
-            open_dict(argv[3], "r");
-            t1 = clock();
+   //     }
+   //     else if (!strcmp(argv[1], "-t"))
+   //     { /* check automaton */
+			printf("3\n");
+			unsigned char *text1 = (unsigned char *)"new.dic";
+            open_dict(text1, "r");
+   //         t1 = clock();
             read_automat(argv[2]);
             test_automat();
         }
         else if (!strcmp(argv[1], "-l"))
         { /* list strings */
+			printf("4\n");
             open_dict(argv[3], "w");
             t1 = clock();
             read_automat(argv[2]);
@@ -915,14 +920,21 @@ int main(int argc, char **argv)
             list_strings(start_state, 0);
 #endif
         }
-        else
+		else
+		{
+			printf("blad1\n");
             show_info();
+		}
         fclose(lex_file);
         t2 = clock();
         show_stat((double) (t2 - t1) / CLOCKS_PER_SEC);
     }
-    else
+	else
+	{
+
+		printf("blad2");
         show_info();
+	}
 
     fgetc(stdin);
     return EXIT_SUCCESS;

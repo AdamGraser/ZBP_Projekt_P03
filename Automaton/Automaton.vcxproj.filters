@@ -24,24 +24,15 @@
     <ClInclude Include="Automaton.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="st_tree.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="st_tree_detail.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="st_tree_iterators.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="st_tree_nodes.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cd00.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Automaton.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
