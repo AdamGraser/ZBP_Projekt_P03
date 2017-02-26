@@ -41,6 +41,9 @@ public:
 	virtual void read_automat(char *fname) = 0;
 	virtual void save_automat(char *fname) = 0;
 	virtual void print_strings() = 0;
+	virtual unsigned size() = 0;
+	virtual unsigned max_size() = 0;
+	virtual void show_stat(double exec_time) = 0;
 };
 
 
@@ -78,7 +81,7 @@ public:
 
 
 	/* End definitions */
-protected:
+private:
 	/// <summary>Maximal lexicon string length.</summary>
 	static const int max_str_len = 300;
 	/// <summary></summary>
@@ -152,17 +155,20 @@ public:
 		fclose(lex_file);
 	}
 
-	void read_automat(char *fname);
-	void save_automat(char *fname);
-	void print_strings();
-	void show_stat(double exec_time);
-	bool exists(string keyword);
-	bool exists2(string keyword);
-	unsigned size();
+void read_automat(char *fname);
+void save_automat(char *fname);
+void print_strings();
+void show_stat(double exec_time);
+bool exists(string keyword);
+bool exists2(string keyword);
+unsigned size();
+unsigned max_size() {
+	return max_aut_size;
+}
 
 	/* ==== LETTER ITERATOR DEFINITION ==== */
 
-	class AutomatonLetterIterator : public std::iterator<std::random_access_iterator_tag, transition> {
+	class AutomatonLetterIterator : public std::iterator<std::forward_iterator_tag, transition> {
 
 		friend class Automaton<false>;
 
@@ -184,7 +190,6 @@ public:
 		}
 
 	public:
-		typedef typename std::iterator<std::random_access_iterator_tag, transition>::difference_type difference_type;
 
 		AutomatonLetterIterator(const AutomatonLetterIterator& other) : automaton(other.automaton), automatArray(other.automatArray), i(other.i) {
 			if (i > automaton.size())
@@ -263,18 +268,6 @@ public:
 			return (automatArray + i)->b.term;
 		}
 
-		AutomatonLetterIterator operator+(const difference_type& n) const {
-			return AutomatonLetterIterator(*this, (i + n));
-		}
-
-		AutomatonLetterIterator& operator+=(const difference_type& n) {
-			i += n;
-			return *this;
-		}
-
-		reference operator[](const difference_type& n) const {
-			return *(automatArray + i + n);
-		}
 
 		bool operator==(const AutomatonLetterIterator& other) const {
 			return i == other.i;
@@ -282,30 +275,6 @@ public:
 
 		bool operator!=(const AutomatonLetterIterator& other) const {
 			return i != other.i;
-		}
-
-		bool operator<(const AutomatonLetterIterator& other) const {
-			return i < other.i;
-		}
-
-		bool operator>(const AutomatonLetterIterator& other) const {
-			return i > other.i;
-		}
-
-		bool operator<=(const AutomatonLetterIterator& other) const {
-			return i <= other.i;
-		}
-
-		bool operator>=(const AutomatonLetterIterator& other) const {
-			return i >= other.i;
-		}
-
-		difference_type operator+(const AutomatonLetterIterator& other) const {
-			return i + other.i;
-		}
-
-		difference_type operator-(const AutomatonLetterIterator& other) const {
-			return i - other.i;
 		}
 	};
 	/* ==== LETTER ITERATOR DEFINITION END ==== */
@@ -377,7 +346,8 @@ public:
 
 					if (!isLast)
 					{
-						Snapshot firstNew = Snapshot{ currentIt + 1, strPos };
+						AutomatonLetterIterator nextIt(currentIt);
+						Snapshot firstNew = Snapshot{ ++nextIt, strPos };
 						snapshotStack.push(firstNew);
 					}
 					Snapshot secondNew = Snapshot{ currentIt.localBegin(), strPos + 1 };
@@ -780,9 +750,7 @@ public:
 
 	// - methods
 
-	void print_strings(iterator it, int str_pos);
 	void print_strings();
-	bool exists(unsigned char *keyword);
 	void read_automat(char *fname);
 	void save_automat(char *fname);
 	bool exists(string keyword);

@@ -405,142 +405,6 @@ void Automaton<true>::read_automat(char *fname)
 }
 
 /*
-** Recursively list all the strings recognized by an automaton,
-** beginning at the given position in the automaton and in the
-** string.
-*/
-void Automaton<true>::list_strings(iterator it, int str_pos)
-{
-	int i;
-	unsigned char currentLetter = *it;
-
-	/* go left */
-	if (!it.isEnd(currentLetter - 1))
-	{
-		iterator left(it);
-		++left;
-		list_strings(left, str_pos);
-	}
-
-	/* add new character */
-	temp_str[str_pos] = currentLetter;
-
-	if (it.isTerm())
-	{
-		/* when string terminates at this character write the string */
-		for (i = 0; i <= str_pos; i++)
-			putc(temp_str[i], lex_file);
-
-		putc('\n', lex_file);
-		n_strings++;
-		n_chars += str_pos + 2;
-	}
-
-	/* execute recursively for all characters in current state */
-	if (!it.isRoot())
-	{
-		iterator next = it.localBegin();
-		list_strings(next, str_pos + 1);
-	}
-
-	/* go right */
-	if (!it.isEnd(currentLetter + 1))
-	{
-		iterator right(it);
-		++right += 1;
-		list_strings(right, str_pos);
-	}
-}
-
-//void Automaton<true>::print_strings(iterator it, int str_pos)
-//{
-//	int i;
-//	unsigned char currentLetter = *it;
-//
-//	/* go left */
-//	if (!it.isEnd(currentLetter - 1))
-//	{
-//		iterator left(it);
-//		++left;
-//		print_strings(left, str_pos);
-//	}
-//
-//	/* add new character */
-//	tempString.seekp(str_pos, std::ios_base::beg);
-//	tempString << currentLetter;
-//
-//	std::string curString = tempString.str().substr(0, tempString.tellp());
-//
-//	if (currentTrans.b.term)
-//	{
-//		/* when string terminates at this character write the string */
-//		std::cout << curString << std::endl;
-//
-//		n_strings++;
-//		n_chars += str_pos + 2;
-//	}
-//
-//	/* execute recursively for all characters in current state */
-//	if (currentTrans.b.dest > 0)
-//	{
-//		iterator next = it.localBegin();
-//		print_strings(next, str_pos + 1);
-//	}
-//
-//	/* go right */
-//	if (!it.isEnd(currentLetter + 1))
-//	{
-//		iterator right(it);
-//		++right += 1;
-//		print_strings(right, str_pos);
-//	}
-//}
-
-void Automaton<true>::print_strings(iterator it, int str_pos)
-{
-	int i;
-	unsigned char currentLetter = *it;
-
-	/* go left */
-	if (!it.isEnd(currentLetter - 1))
-	{
-		iterator left(it);
-		++left;
-		print_strings(left, str_pos);
-	}
-
-	/* add new character */
-	tempString.seekp(str_pos, std::ios_base::beg);
-	tempString << currentLetter;
-
-	std::string curString = tempString.str().substr(0, tempString.tellp());
-
-	if (it.isTerm())
-	{
-		/* when string terminates at this character write the string */
-		std::cout << curString << std::endl;
-
-		n_strings++;
-		n_chars += str_pos + 2;
-	}
-
-	/* execute recursively for all characters in current state */
-	if (!it.isDestRoot())
-	{
-		iterator next = it.localBegin();
-		print_strings(next, str_pos + 1);
-	}
-
-	/* go right */
-	if (!it.isEnd(currentLetter + 1))
-	{
-		iterator right(it);
-		++right += 1;
-		print_strings(right, str_pos);
-	}
-}
-
-/*
 ** Check if the automaton is correct
 ** (test all the strings from a lexicon).
 */
@@ -932,15 +796,6 @@ void Automaton<true>::print_strings()
 
 }
 
-
-bool Automaton<true>::exists(unsigned char *keyword)
-{
-	n_strings = 0;
-	n_chars = 0;
-
-	return check_string(keyword);
-}
-
 bool Automaton<true>::exists(string keyword)
 {
 	for (Automaton<true>::AutomatonWordIterator it = this->wordBegin(); !it.isEnd(); it++)
@@ -956,6 +811,8 @@ bool Automaton<true>::exists(string keyword)
 
 bool Automaton<true>::exists2(string keyword)
 {
+	n_strings = 0;
+	n_chars = 0;
 
 	return check_string((unsigned char*)keyword.c_str());
 }
